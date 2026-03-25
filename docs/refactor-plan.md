@@ -1,348 +1,366 @@
 # 博客系统重构计划
 
-> 基于 2026-03-25 的代码审查生成
+> 基于 2026-03-25 代码审查生成
+>
+> **跨 Session 工作流：** 每个阶段在独立 session 中执行。新 session 开始时读取本文件，定位当前进度，执行对应步骤，完成后更新勾选状态和备注。
+>
+> **每步完成后：** 本地验证 → 自动 git commit → 勾选完成 → 更新"当前进度"
+>
+> 状态图例: `[ ]` 未开始 · `[~]` 进行中 · `[x]` 已完成 · `[!]` 方案有变，见备注
 
 ## 目标
 
-将现有博客系统从"能用"提升到"可维护、安全、可扩展"的状态。重构遵循渐进式原则，按优先级分阶段执行，每个阶段完成后系统应保持可用。
+将博客系统从"能用"提升到"可维护、安全、可扩展"。渐进式执行，每阶段完成后系统保持可用。
+
+## 当前进度
+
+> **下一步：** 阶段 0，步骤 0.1
+>
+> 每次完成一个阶段后更新此区块，写明下一步目标，供新 session 快速定位。
 
 ---
 
-## 第一阶段：安全加固
+## 阶段 0：准备工作（无功能变更）
 
-**优先级：最高 — 必须首先完成**
+> 目标：清理噪音、锁定基线，让后续每个阶段的 diff 干净可读。
 
-### 1.1 修复 createdAt 任意篡改漏洞
-- **文件:** `controllers/postController.js`
-- **问题:** `createPost` 和 `updatePost` 接受用户传入的 `createdAt`，使用 `setDataValue()` 绕过 Sequelize 时间戳保护
-- **方案:** 移除用户输入中的 `createdAt`，仅允许 admin 角色通过专用接口修改
+- [ ] **0.1 禁用 CI/CD 自动触发**
+  - `.github/workflows/ci-cd.yml`：去掉 `push` 触发，仅保留 `workflow_dispatch`
+  - 原因：ECS 已过期，每次 push 白跑 build + deploy 必定失败
 
-### 1.2 移除硬编码 JWT 密钥回退
-- **文件:** `middlewares/authMiddleware.js`
-- **问题:** `process.env.JWT_SECRET || 'your-secret-key'` 存在回退值，env 未设置时使用弱密钥
-- **方案:** 移除回退值，启动时校验 `JWT_SECRET` 必须存在，否则拒绝启动
+- [ ] **0.2 清理死代码和冗余文件**
+  - 删除 `testDb.js`、`fixSlugs.js`
+  - 删除 `client/src/components/HelloWorld.vue`
+  - 确认 `ArticleCard.vue` vs `ArticleCardV2.vue` 哪个在用，删除多余的
+  - 确认 `PlaceholderView.vue` 用途，决定保留或删除
+  - 清理所有 `console.log`（保留 `console.error` 用于真正的错误）
+  - 删除 `.DS_Store`，加入 `.gitignore`
 
-### 1.3 添加输入验证层
-- **新建:** `validators/` 目录
-- **依赖:** 引入 `express-validator` 或 `joi`
-- **覆盖范围:**
-  - 用户注册/登录：email 格式、密码强度、用户名长度
-  - 文章 CRUD：title 非空/长度、content 非空、categoryId 有效
-  - 评论：content 非空/长度限制
-  - 分类/标签：name 非空/长度、slug 格式
-- **方案:** 每个 route 文件对应一个 validator 文件，在路由中间件链中执行
+- [ ] **0.3 修复后端 package.json**
+  - 移除不属于后端的依赖：`@bytemd/*`、`bytemd`、`highlight.js`、`markdown-it`
+  - 这些是前端库，后端不应引用
 
-### 1.4 后端强制 admin 权限校验
-- **文件:** `middlewares/authMiddleware.js`, 各 `routes/*.js`
-- **问题:** admin 身份校验依赖前端 localStorage，后端部分接口未校验
-- **方案:** 在 `authMiddleware` 中新增 `requireAdmin` 中间件，从数据库/JWT payload 验证角色，所有管理接口必须使用
+- [ ] **0.4 统一代码风格基础设施**
+  - 添加 `.editorconfig`
+  - 可选：ESLint + Prettier（可在阶段 1 一起加）
 
-### 1.5 添加速率限制
-- **文件:** `app.js`
-- **依赖:** 引入 `express-rate-limit`
-- **方案:**
+**阶段 0 验证：** `npm run dev` 和 `cd client && npm run build` 无报错即可（仅删文件/改配置，不涉及功能）
+
+**阶段 0 备注：**
+
+---
+
+## 阶段 1：安全加固
+
+> 目标：修复所有 Critical/High 安全问题。优先级最高，必须首先完成。
+
+### 1A. 认证 & 授权
+
+- [ ] **1A.1 修复 JWT 密钥问题**
+  - 文件：`middlewares/authMiddleware.js`
+  - 问题：`process.env.JWT_SECRET || 'your-secret-key'` 存在弱密钥回退
+  - 方案：移除回退值，启动时若 `JWT_SECRET` 未设置直接报错退出
+  - 更新 `.env.example` 注明必须修改
+
+- [ ] **1A.2 修复 createdAt 篡改漏洞**
+  - 文件：`controllers/postController.js`
+  - 问题：`createPost`/`updatePost` 接受用户传入的 `createdAt`，用 `setDataValue()` 绕过 Sequelize 时间戳保护
+  - 方案：仅 admin 可设置 `createdAt`，普通用户提交的直接忽略
+
+- [ ] **1A.3 强化授权中间件**
+  - 文件：`middlewares/authMiddleware.js`、各 `routes/*.js`
+  - 在 `authMiddleware` 中新增 `requireAdmin` 中间件，从 JWT payload 验证角色
+  - 所有管理接口必须使用
+  - 资源所有权检查（编辑/删除 post/comment 时校验 userId）
+
+### 1B. 输入验证 & 防护
+
+- [ ] **1B.1 添加输入验证层**
+  - 新建 `validators/` 目录，引入 `express-validator` 或 `joi`
+  - 覆盖范围：
+    - 用户注册/登录：email 格式、密码强度、用户名长度
+    - 文章 CRUD：title 非空/长度、content 非空、categoryId 有效
+    - 评论：content 非空/长度限制
+    - 分类/标签：name 非空/长度、slug 格式
+  - 每个 route 文件对应一个 validator 文件
+
+- [ ] **1B.2 添加速率限制**
+  - 引入 `express-rate-limit`
   - 全局：100 req/15min
   - 登录/注册：5 req/15min
   - 文件上传：10 req/hour
 
-### 1.6 Token 存储改为 HttpOnly Cookie
-- **文件:** `controllers/userController.js`（设置 cookie）, `middlewares/authMiddleware.js`（读取 cookie）, `client/src/api/index.js`（移除 header 注入）
-- **方案:**
-  - 登录成功后通过 `Set-Cookie` 下发 token，设置 `httpOnly`, `secure`, `sameSite`
-  - 前端 axios 配置 `withCredentials: true`
-  - 移除前端 localStorage 中的 token 存取逻辑
+- [ ] **1B.3 添加安全 HTTP 头**
+  - 引入 `helmet`
+  - `app.js` 中 `app.use(helmet())`
 
-### 1.7 添加 CSRF 防护
-- **文件:** `app.js`
-- **依赖:** 引入 `csurf` 或双重提交 cookie 模式
-- **方案:** 配合 1.6 的 cookie 方案，对所有非 GET 请求校验 CSRF token
+- [ ] **1B.4 XSS 防护**
+  - 对用户输入的 HTML/Markdown 做 sanitize
+  - 纯文本字段（标题、用户名）strip HTML
 
-### 1.8 添加安全 HTTP 头
-- **文件:** `app.js`
-- **依赖:** 引入 `helmet`
-- **方案:** `app.use(helmet())` 一行搞定，包含 XSS 防护、内容类型嗅探防护等
+### 1C. Token & 上传安全
+
+- [ ] **1C.1 改善 Token 安全**
+  - 方案 A（推荐）：改用 HttpOnly Cookie，设置 `httpOnly`/`secure`/`sameSite`
+  - 方案 B：保持 localStorage + token 刷新机制 + 缩短过期时间
+  - 此步骤开始时与用户讨论决定方案
+
+- [ ] **1C.2 强化文件上传校验**
+  - 校验文件 MIME type（不能只看扩展名）
+  - 限制上传频率
+  - 生成安全文件名，防止路径穿越
+
+- [ ] **1C.3 添加 CSRF 防护**
+  - 若采用 Cookie 方案，需配合 CSRF token
+  - 对所有非 GET 请求校验
+
+**阶段 1 验证：** `npm run dev` 启动无报错 + 用 curl 测试：登录接口（速率限制生效）、创建文章（验证规则生效、createdAt 不可篡改）、无 token 访问受保护接口返回 401
+
+**阶段 1 备注：**
 
 ---
 
-## 第二阶段：后端架构重构
+## 阶段 2：后端架构重构
 
-**优先级：高 — 安全加固完成后执行**
+> 目标：建立 service 层、统一错误处理与响应格式、修复数据模型问题。
 
-### 2.1 引入 Service 层
-- **新建:** `services/` 目录
-- **拆分:**
-  - `services/postService.js` — 文章 CRUD 业务逻辑、slug 生成、分页查询
+### 2A. 错误处理 & 响应格式
+
+- [ ] **2A.1 创建统一错误类**
+  - 新建 `utils/AppError.js` — 自定义错误类，含 `statusCode`、`code`、`message`
+  - 新建 `utils/catchAsync.js` — controller 异步包装器，消除重复 try/catch
+  - 预定义：`NotFoundError`、`ValidationError`、`UnauthorizedError`、`ForbiddenError`
+
+- [ ] **2A.2 创建统一响应工具**
+  - 新建 `utils/response.js`
+  - 统一格式：`{ success, data, message, pagination? }`
+  - 封装 `success(res, data, message)` / `error(res, err)`
+
+- [ ] **2A.3 重写全局错误中间件**
+  - `app.js` 中 error handler 改用 AppError 分类处理
+  - 开发环境返回 stack trace，生产环境只返回安全信息
+
+### 2B. Service 层
+
+- [ ] **2B.1 建立 services/ 目录**
+  - `services/postService.js` — 文章 CRUD、slug 生成、分页查询
   - `services/userService.js` — 注册/登录/密码加密/token 生成
-  - `services/categoryService.js` — 分类 CRUD
-  - `services/tagService.js` — 标签 CRUD
-  - `services/commentService.js` — 评论 CRUD
-  - `services/uploadService.js` — 文件处理逻辑
-- **原则:** Controller 只负责解析请求参数 + 调用 Service + 返回响应；Service 负责业务逻辑 + 调用 Model
+  - `services/categoryService.js`、`tagService.js`、`commentService.js`、`uploadService.js`
 
-### 2.2 统一 API 响应格式
-- **新建:** `utils/response.js`
-- **格式:**
-  ```json
-  {
-    "success": true,
-    "data": { ... },
-    "message": "操作成功",
-    "pagination": { "page": 1, "pageSize": 10, "total": 100 }
-  }
-  ```
-  ```json
-  {
-    "success": false,
-    "error": { "code": "VALIDATION_ERROR", "message": "标题不能为空" }
-  }
-  ```
-- **封装:** `success(res, data, message)` / `error(res, statusCode, code, message)` 工具函数
+- [ ] **2B.2 重构所有 controller**
+  - Controller 只负责：解析请求参数 → 调用 service → 返回响应
+  - 业务逻辑、数据库查询全部下沉到 service
 
-### 2.3 统一错误处理
-- **新建:** `utils/AppError.js`
-- **方案:**
-  - 自定义 `AppError` 类，包含 `statusCode`, `code`, `message`
-  - 预定义常见错误：`NotFoundError`, `ValidationError`, `UnauthorizedError`, `ForbiddenError`
-  - `app.js` 中注册全局错误中间件，捕获所有 `AppError` 并格式化响应
-  - Controller/Service 中直接 `throw new NotFoundError('文章不存在')` 即可
+### 2C. 数据模型 & 查询
 
-### 2.4 修复 Slug 生成逻辑
-- **文件:** `models/Post.js`, `models/Category.js`, `models/Tag.js`
-- **问题:** 当前逻辑拼接随机数（如 `my-title-458392`），URL 不美观
-- **方案:**
-  1. 先尝试纯 title slug：`my-title`
-  2. 若数据库中已存在，递增后缀：`my-title-2`, `my-title-3`
-  3. 更新文章时，仅在 title 变化时重新生成 slug
-  4. 删除 `fixSlugs.js`（不再需要修补脚本）
+- [ ] **2C.1 修复 Slug 生成逻辑**
+  - 去掉随机数后缀，改为：生成 slug → 查重 → 重复则追加 `-2`、`-3`
+  - Post、Category、Tag 统一使用同一套 slug 工具函数
+  - 更新时仅在 title 变化时重新生成 slug
 
-### 2.5 所有列表接口添加分页
-- **文件:** `controllers/postController.js`, `categoryController.js`, `tagController.js`, `commentController.js`
-- **方案:**
-  - 统一查询参数：`?page=1&pageSize=10&sort=createdAt&order=desc`
-  - 返回 `pagination` 对象（见 2.2）
-  - `getAllPosts` 当前返回全量数据，必须改为分页
-  - `getAllCategories`/`getAllTags` 数据量小可保留全量，但预留分页能力
+- [ ] **2C.2 引入 Sequelize Migrations**
+  - 用 `sequelize-cli` 管理 schema 变更
+  - 为当前 schema 生成初始 migration 作为基线
+  - 移除 `models/index.js` 中的 `sync({ alter: true })`
 
-### 2.6 引入结构化日志
-- **依赖:** 引入 `pino`（轻量高性能）或 `winston`
-- **方案:**
-  - 替换所有 `console.log` / `console.error`
-  - 配置日志级别：dev 用 debug，prod 用 info
-  - 请求日志中间件（pino-http）
-  - 错误日志包含 stack trace + request context
+- [ ] **2C.3 添加缺失索引**（通过 migration）
+  - `posts`: `status`、`categoryId`、`createdAt`，复合索引 `(status, createdAt)`
+  - `comments`: `postId`、`userId`
 
-### 2.7 数据库迁移策略
-- **工具:** 已安装 `sequelize-cli`
-- **方案:**
-  1. 初始化 `npx sequelize-cli init`（生成 migrations/seeders 目录）
-  2. 根据当前模型创建初始迁移文件
-  3. 移除 `models/index.js` 中的 `sequelize.sync({ alter: true })`
-  4. 启动时只运行 `sequelize db:migrate`
-  5. 后续所有表结构变更通过迁移文件管理
-
-### 2.8 添加数据库索引
-- **文件:** 通过迁移文件添加
-- **需要的索引:**
-  - `posts`: `status`, `categoryId`, `createdAt`（常用查询条件）
-  - `posts`: 复合索引 `(status, createdAt)` 用于列表分页
-  - `comments`: `postId`, `userId`
-  - 确认现有 `slug` unique 索引生效
-
-### 2.9 优化 N+1 查询
-- **文件:** `controllers/categoryController.js`, `tagController.js`
-- **问题:** `getAllCategories` include 了所有关联文章的完整数据
-- **方案:**
-  - 列表接口只返回关联数量：`attributes: { include: [[sequelize.fn('COUNT', ...), 'postCount']] }`
+- [ ] **2C.4 优化 N+1 查询**
+  - `getAllCategories`/`getAllTags` 不 include 全部 posts，只返回文章计数
   - 详情接口按需加载关联数据，且加分页
 
----
+- [ ] **2C.5 列表接口添加分页**
+  - 统一查询参数：`?page=1&pageSize=10&sort=createdAt&order=desc`
+  - `getAllPosts` 必须改为分页（当前返回全量数据）
+  - `getAllCategories`/`getAllTags` 预留分页能力
 
-## 第三阶段：前端架构重构
+### 2D. 日志
 
-**优先级：高 — 需配合后端 API 变更同步进行**
+- [ ] **2D.1 引入结构化日志**
+  - 引入 `pino` 或 `winston`，替换所有 `console.log`/`console.error`
+  - 请求日志中间件、错误日志含 stack trace + request context
 
-### 3.1 引入 Pinia 状态管理
-- **依赖:** 引入 `pinia`
-- **新建:** `client/src/stores/` 目录
-- **Store 划分:**
-  - `stores/auth.js` — 用户登录状态、token、用户信息、登录/登出方法
-  - `stores/ui.js` — 主题模式、侧边栏状态等 UI 状态
-- **原则:** 所有跨组件共享的状态统一进 store
+**阶段 2 验证：** `npm run dev` 启动无报错 + 所有 API 返回统一格式 `{ success, data, message }` + 列表接口返回 `pagination` + slug 不再包含随机数
 
-### 3.2 移除直接 localStorage 操作
-- **文件:** `client/src/api/index.js`, `client/src/router/index.js`, 各组件
-- **方案:** 所有 localStorage 操作内聚到 Pinia store 中，组件通过 store 访问
-
-### 3.3 API 层拆分
-- **当前:** `client/src/api/index.js` 一个文件包含所有 API 调用（数百行）
-- **拆分为:**
-  ```
-  client/src/api/
-  ├── client.js       # axios 实例配置、拦截器
-  ├── auth.js         # 登录、注册、获取用户信息
-  ├── posts.js        # 文章 CRUD
-  ├── categories.js   # 分类 CRUD
-  ├── tags.js         # 标签 CRUD
-  ├── comments.js     # 评论 CRUD
-  ├── upload.js       # 文件上传
-  └── admin.js        # 管理接口
-  ```
-
-### 3.4 清理死代码
-- **删除:**
-  - `client/src/components/HelloWorld.vue` — Vite 脚手架模板文件
-  - `client/src/views/PlaceholderView.vue` — 占位组件
-  - `client/src/assets/vue.svg` — 默认 logo
-  - `testDb.js` — 已注释掉的测试文件
-  - `fixSlugs.js` — 修补脚本（slug 逻辑修复后不再需要）
-- **确认后删除:**
-  - `client/src/style.css` — 如果与 `index.css` 功能重复
-
-### 3.5 合并重复组件
-- **文件:** `ArticleCard.vue` + `ArticleCardV2.vue`
-- **方案:** 对比两个版本差异，保留更好的版本统一为 `ArticleCard.vue`，更新所有引用
-
-### 3.6 整理 CSS 文件
-- **文件:** `client/src/index.css`, `client/src/style.css`
-- **方案:** 合并为 `index.css`，按职责组织（Tailwind directives → 全局基础样式 → 组件样式）
-
-### 3.7 移除生产环境 console.log
-- **方案一（推荐）:** `vite.config.js` 中配置 esbuild drop:
-  ```js
-  esbuild: { drop: mode === 'production' ? ['console', 'debugger'] : [] }
-  ```
-- **方案二:** 全局搜索替换，手动移除调试日志
-
-### 3.8 添加 404 页面 + 错误边界
-- **新建:** `client/src/views/NotFoundView.vue`
-- **路由:** 添加 `{ path: '/:pathMatch(.*)*', component: NotFoundView }`
-- **可选:** 添加全局错误边界组件（Vue 3 的 `onErrorCaptured`）
-
-### 3.9 Admin 页面拆分为子路由
-- **当前:** `AdminView.vue` 内用 tab 切换不同管理模块
-- **方案:** 改为嵌套路由：
-  ```
-  /admin              → AdminLayout.vue (侧边栏 + router-view)
-  /admin/posts        → PostsManager.vue
-  /admin/categories   → CategoriesManager.vue
-  /admin/tags         → TagsManager.vue
-  /admin/comments     → CommentsManager.vue
-  ```
-- 好处：URL 可直接分享、浏览器前进后退可用、各模块可独立懒加载
+**阶段 2 备注：**
 
 ---
 
-## 第四阶段：DevOps 改善
+## 阶段 3：前端架构重构
 
-**优先级：中 — 可与前三阶段穿插进行**
+> 目标：引入状态管理、清理组件、拆分 API 层、改善 UX。
 
-### 4.1 精简 Dockerfile
-- **当前:** 根目录有 `Dockerfile`（用途不明）、`Dockerfile.backend.dev`、`Dockerfile.backend.prod`，client 下有 `Dockerfile.frontend.dev`、`Dockerfile.prod`
-- **目标结构:**
-  ```
-  Dockerfile              # 后端，multi-stage（dev/prod 共用，通过 target 区分）
-  client/Dockerfile       # 前端，multi-stage
-  ```
-- **后端 Dockerfile 改进:**
-  - Multi-stage build 减小镜像体积
-  - 添加 `NODE_ENV` ARG 支持
-  - 添加健康检查指令
-  - 使用非 root 用户运行
+### 3A. 状态管理
 
-### 4.2 完善 CI/CD Pipeline
-- **文件:** `.github/workflows/ci-cd.yml`
-- **添加步骤:**
-  1. Lint 检查（ESLint）
-  2. 类型检查（如果迁移到 TypeScript）
-  3. 后端单元测试
-  4. 前端构建测试
-  5. Docker 镜像安全扫描（Trivy）
-- **改进部署:**
-  - 添加部署前备份
-  - 添加回滚机制
-  - 移除硬编码路径
+- [ ] **3A.1 引入 Pinia**
+  - 新建 `client/src/stores/`
+  - `stores/auth.js` — token、用户信息、登录/登出
+  - `stores/ui.js` — 主题、全局 loading
+  - 替换所有直接操作 `localStorage` 的代码
 
-### 4.3 完善 .gitignore
-- **确保排除:**
-  - `.env`（当前似乎已提交到仓库）
-  - `.DS_Store`
-  - `uploads/`（用户上传内容不应进仓库）
-  - `*.log`
+- [ ] **3A.2 重构路由守卫**
+  - 使用 Pinia auth store 判断登录/admin 状态
+  - 服务端校验 token 有效性
+  - 添加 404 兜底路由 + `NotFoundView.vue`
 
-### 4.4 配置代码规范工具
-- **后端:** ESLint + Prettier
-- **前端:** ESLint + Prettier + eslint-plugin-vue
-- **Git hooks:** `husky` + `lint-staged`，提交前自动格式化
+### 3B. 组件整理
 
----
+- [ ] **3B.1 统一 ArticleCard**
+  - 合并 `ArticleCard.vue` 和 `ArticleCardV2.vue`，保留更好的版本
 
-## 第五阶段：测试
+- [ ] **3B.2 拆分大组件**
+  - `EditorView.vue` — 抽取图片上传、分类选择为独立 composable/组件
+  - `AdminView.vue` — 各管理 tab 改为子路由：
+    ```
+    /admin              → AdminLayout.vue (侧边栏 + router-view)
+    /admin/posts        → PostsManager.vue
+    /admin/categories   → CategoriesManager.vue
+    /admin/tags         → TagsManager.vue
+    /admin/comments     → CommentsManager.vue
+    ```
 
-**优先级：中 — 重构稳定后补充**
+- [ ] **3B.3 整理 CSS**
+  - 合并 `index.css` 和 `style.css` 为一个文件
+  - 按职责组织：Tailwind directives → 全局基础样式 → 组件样式
 
-### 5.1 后端 API 测试
-- **工具:** `vitest` + `supertest`
-- **优先覆盖:**
-  - 用户认证流程（注册 → 登录 → token 校验）
-  - 文章 CRUD + 权限校验
-  - 输入验证（边界值、异常输入）
-- **测试数据库:** 使用 SQLite in-memory 或 Docker MySQL 容器
+### 3C. API 层整理
 
-### 5.2 前端组件测试
-- **工具:** `vitest` + `@vue/test-utils`
-- **优先覆盖:**
-  - Pinia stores（auth、ui）
-  - 关键组件交互（编辑器保存、评论提交）
-  - 路由守卫逻辑
+- [ ] **3C.1 拆分 api/index.js**
+  - 按资源拆分为：`api/client.js`(axios 实例)、`api/posts.js`、`api/auth.js`、`api/comments.js` 等
+  - 统一错误处理拦截器（401 自动跳登录、网络错误 toast）
+  - 清理所有 console.log
 
-### 5.3 E2E 测试（可选）
-- **工具:** Playwright
-- **覆盖:** 核心用户流程（注册 → 登录 → 发文 → 评论 → 管理）
+### 3D. UX 改善
+
+- [ ] **3D.1 全局错误/加载状态**
+  - 请求 loading 指示器
+  - 错误 toast 通知
+
+- [ ] **3D.2 编辑器改进**
+  - 自动保存草稿到 localStorage
+  - 离开页面时未保存提醒
+
+- [ ] **3D.3 生产环境去除 console.log**
+  - `vite.config.js` 中 esbuild drop：`esbuild: { drop: ['console', 'debugger'] }`
+
+**阶段 3 验证：** `cd client && npm run dev` 启动无报错 + `npm run build` 构建成功 + 登录/登出/发文/浏览/管理后台页面功能正常
+
+**阶段 3 备注：**
 
 ---
 
-## 第六阶段：功能增强（可选）
+## 阶段 4：DevOps 改善
 
-按需选做，不影响核心重构。
+> 目标：精简 Docker 配置、完善 CI/CD、添加代码规范工具。可与阶段 2/3 穿插进行。
 
-| # | 功能 | 说明 |
-|---|------|------|
-| 6.1 | SEO 优化 | 添加 vue-meta/unhead 管理 meta tags，生成 sitemap.xml |
-| 6.2 | 图片优化 | 引入 `sharp`，上传时自动压缩、生成缩略图 |
-| 6.3 | Redis 缓存 | 缓存热门文章列表、分类/标签数据，减少数据库压力 |
-| 6.4 | 编辑器自动保存 | 定时将草稿存储到 localStorage 或后端，防止意外丢失 |
-| 6.5 | 软删除 | 文章/评论添加 `deletedAt` 字段，支持回收站和恢复 |
-| 6.6 | API 文档 | 引入 `swagger-jsdoc` + `swagger-ui-express`，自动生成接口文档 |
-| 6.7 | 全文搜索 | 引入 Elasticsearch 或 MeiliSearch 替代 SQL LIKE 查询 |
-| 6.8 | 文章版本历史 | 每次编辑保存 diff，支持查看和回滚历史版本 |
+- [ ] **4.1 精简 Dockerfile**
+  - 合并为：`Dockerfile`(后端 multi-stage) + `client/Dockerfile`(前端 multi-stage)
+  - 通过 `--target` 区分 dev/prod
+  - 使用非 root 用户运行、添加健康检查
+
+- [ ] **4.2 完善 .gitignore**
+  - 确保排除：`.env`、`.DS_Store`、`uploads/`、`*.log`
+  - 检查是否有已提交的敏感文件
+
+- [ ] **4.3 配置代码规范工具**
+  - ESLint + Prettier（前后端）
+  - `husky` + `lint-staged`：提交前自动格式化
+
+- [ ] **4.4 选择部署平台**
+  - 候选：阿里云 ECS / AWS Lightsail / Railway / Fly.io / Render
+  - 根据预算和运维偏好决定
+
+- [ ] **4.5 重写 CI/CD Pipeline**
+  - 根据新平台重写 deploy 阶段
+  - 添加 lint 检查 + 测试步骤
+  - 添加构建缓存、镜像安全扫描
+
+- [ ] **4.6 生产环境加固**
+  - HTTPS 配置
+  - 环境变量管理
+  - 数据库备份策略
+
+**阶段 4 验证：** `docker compose -f docker-compose.dev.yml up --build` 全部服务启动正常 + lint 通过 + 前后端页面可访问
+
+**阶段 4 备注：**
 
 ---
 
-## 执行顺序建议
+## 阶段 5：测试
+
+> 目标：补充核心测试覆盖。重构稳定后进行。
+
+- [ ] **5.1 后端 API 测试**
+  - 工具：`vitest` + `supertest`
+  - 优先覆盖：认证流程、文章 CRUD + 权限、输入验证边界值
+
+- [ ] **5.2 前端组件测试**
+  - 工具：`vitest` + `@vue/test-utils`
+  - 优先覆盖：Pinia stores、路由守卫、关键交互
+
+- [ ] **5.3 E2E 测试（可选）**
+  - 工具：Playwright
+  - 覆盖：注册 → 登录 → 发文 → 评论 → 管理
+
+**阶段 5 验证：** `npm test` 全部通过 + 覆盖率报告生成
+
+**阶段 5 备注：**
+
+---
+
+## 阶段 6：功能增强（可选）
+
+> 按需选做，不影响核心重构。
+
+| #   | 功能         | 说明                                           |
+| --- | ------------ | ---------------------------------------------- |
+| 6.1 | SEO 优化     | vue-meta/unhead 管理 meta tags，生成 sitemap   |
+| 6.2 | 图片优化     | `sharp` 上传时自动压缩/生成缩略图              |
+| 6.3 | Redis 缓存   | 缓存热门文章、分类/标签，减少数据库压力        |
+| 6.4 | 软删除       | 文章/评论添加 `deletedAt`，支持回收站          |
+| 6.5 | API 文档     | `swagger-jsdoc` + `swagger-ui-express`         |
+| 6.6 | 全文搜索     | Elasticsearch / MeiliSearch 替代 SQL LIKE      |
+| 6.7 | 文章版本历史 | 每次编辑保存 diff，支持查看和回滚              |
+
+**阶段 6 备注：**
+
+---
+
+## 执行顺序
 
 ```
-第一阶段（安全加固）
-    ↓
-第二阶段（后端架构）──→ 第四阶段（DevOps）可穿插
-    ↓
-第三阶段（前端架构）──→ 第四阶段（DevOps）可穿插
-    ↓
-第五阶段（测试）
-    ↓
-第六阶段（功能增强）按需选做
+阶段 0（准备清理）
+  ↓
+阶段 1（安全加固）
+  ↓
+阶段 2（后端架构）──→ 阶段 4（DevOps）可穿插
+  ↓
+阶段 3（前端架构）──→ 阶段 4（DevOps）可穿插
+  ↓
+阶段 5（测试）
+  ↓
+阶段 6（功能增强）按需选做
 ```
-
-前三阶段建议严格按顺序执行，因为：
-- 安全问题不修复，其他改动没意义
-- 前端依赖后端 API 格式，后端先改前端再适配
-- 每个阶段完成后做一次全量功能验证
-
----
 
 ## 重构原则
 
 1. **渐进式** — 每次改动保持系统可用，不做大爆炸式重写
 2. **先修后建** — 先修安全漏洞和 bug，再优化架构
-3. **向后兼容** — API 变更时考虑前端适配周期，必要时做版本过渡
-4. **测试驱动** — 新代码写测试，重构代码补测试
-5. **最小改动** — 每个 PR 聚焦一个主题，避免混杂无关变更
+3. **最小改动** — 每步聚焦一个主题，避免混杂无关变更
+4. **每步验证** — 完成后在备注区记录结果，标记是否影响后续步骤
+
+---
+
+## 进度追踪
+
+| 阶段   | 状态   | 开始日期 | 完成日期 | Session 数 |
+| ------ | ------ | -------- | -------- | ---------- |
+| 阶段 0 | 未开始 |          |          |            |
+| 阶段 1 | 未开始 |          |          |            |
+| 阶段 2 | 未开始 |          |          |            |
+| 阶段 3 | 未开始 |          |          |            |
+| 阶段 4 | 未开始 |          |          |            |
+| 阶段 5 | 未开始 |          |          |            |
+| 阶段 6 | 未开始 |          |          |            |
