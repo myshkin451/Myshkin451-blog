@@ -125,8 +125,7 @@
   
   // 检查用户登录状态
   const checkLoginStatus = () => {
-    const token = localStorage.getItem('token');
-    isLoggedIn.value = !!token;
+    isLoggedIn.value = !!localStorage.getItem('user');
   };
   
   // 生命周期钩子

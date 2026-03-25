@@ -104,9 +104,7 @@ const handleLogin = async () => {
 
 // 检查是否已登录
 onMounted(() => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    // 已登录用户重定向到首页
+  if (localStorage.getItem('user')) {
     router.push('/');
   }
 });

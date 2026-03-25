@@ -235,33 +235,31 @@ const toggleTheme = () => {
 };
 
 const checkUserStatus = () => {
-  const token = localStorage.getItem('token');
-  isLoggedIn.value = !!token;
-
-  if (!isLoggedIn.value) {
-    userName.value = '用户';
-    userAvatar.value = null;
-    isAdmin.value = false;
-    return;
-  }
-
   try {
     const userStr = localStorage.getItem('user');
-    if (!userStr) return;
+    if (!userStr) {
+      isLoggedIn.value = false;
+      userName.value = '用户';
+      userAvatar.value = null;
+      isAdmin.value = false;
+      return;
+    }
     const userData = JSON.parse(userStr);
+    isLoggedIn.value = true;
     userName.value = userData.username || '用户';
     userAvatar.value = userData.avatar || null;
     isAdmin.value = userData.isAdmin === true || userData.role === 'admin';
   } catch (e) {
+    isLoggedIn.value = false;
     userName.value = '用户';
     userAvatar.value = null;
     isAdmin.value = false;
   }
 };
 
-const logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
+const logout = async () => {
+  const { default: apiService } = await import('../api/index.js');
+  await apiService.logout();
 
   isLoggedIn.value = false;
   userName.value = '用户';

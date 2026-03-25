@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
 const { sequelize, syncDatabase } = require('./models');
 const routes = require('./routes');
@@ -19,7 +20,11 @@ const app = express();
 
 // 中间件
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  credentials: true,
+}));
+app.use(cookieParser());
 app.use(globalLimiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

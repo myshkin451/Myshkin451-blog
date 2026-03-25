@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 1，步骤 1C.1
+> **下一步：** 阶段 1，步骤 1C.2
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -106,10 +106,9 @@
 
 ### 1C. Token & 上传安全
 
-- [ ] **1C.1 改善 Token 安全**
-  - 方案 A（推荐）：改用 HttpOnly Cookie，设置 `httpOnly`/`secure`/`sameSite`
-  - 方案 B：保持 localStorage + token 刷新机制 + 缩短过期时间
-  - 此步骤开始时与用户讨论决定方案
+- [x] **1C.1 改善 Token 安全**
+  - 采用方案 A：HttpOnly Cookie
+  - 设置 `httpOnly`/`secure`(生产环境)/`sameSite: lax`/`maxAge: 1d`
 
 - [ ] **1C.2 强化文件上传校验**
   - 校验文件 MIME type（不能只看扩展名）

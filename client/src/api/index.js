@@ -5,25 +5,11 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 // 创建axios实例
 const api = axios.create({
   baseURL: '/api',
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
 });
-
-// 请求拦截器添加token
-api.interceptors.request.use(
-  config => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  error => {
-    console.error('请求错误:', error);
-    return Promise.reject(error);
-  }
-);
 
 // 响应拦截器
 api.interceptors.response.use(
@@ -143,12 +129,11 @@ const apiService = {
     try {
       const response = await api.post('/users/login', credentials);
 
-      // 存储用户数据和token
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
+      // token 已通过 HttpOnly Cookie 设置，仅存储用户信息用于 UI 展示
+      if (response.data.user) {
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
-      
+
       return response.data;
     } catch (error) {
       console.error('登录失败:', error);
@@ -161,12 +146,10 @@ const apiService = {
     try {
       const response = await api.post('/users/register', userData);
 
-      // 如果注册成功并返回token，自动登录
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
+      if (response.data.user) {
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
-      
+
       return response.data;
     } catch (error) {
       console.error('注册失败:', error);
@@ -340,8 +323,12 @@ async uploadPostImage(formData) {
   },
 
   // 用户登出
-  logout() {
-    localStorage.removeItem('token');
+  async logout() {
+    try {
+      await api.post('/users/logout');
+    } catch {
+      // 即使请求失败也清除本地状态
+    }
     localStorage.removeItem('user');
   },
 

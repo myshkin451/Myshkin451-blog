@@ -9,6 +9,7 @@ const validate = require('../validators/validate');
 // 公开路由
 router.post('/register', authLimiter, userValidator.register, validate, userController.register);
 router.post('/login', authLimiter, userValidator.login, validate, userController.login);
+router.post('/logout', userController.logout);
 // 个人中心相关路由
 router.get('/profile', protect, userController.getUserProfile);
 router.put('/profile', protect, userValidator.updateProfile, validate, userController.updateUserProfile);

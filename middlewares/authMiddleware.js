@@ -4,13 +4,12 @@ const { User } = require('../models');
 // 验证JWT令牌
 exports.protect = async (req, res, next) => {
     try {
-        let token;
-    
-        // 检查Authorization头
-        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        // 优先从 HttpOnly Cookie 读取，兼容 Bearer header
+        let token = req.cookies?.token;
+        if (!token && req.headers.authorization?.startsWith('Bearer')) {
             token = req.headers.authorization.split(' ')[1];
         }
-    
+
         if (!token) {
             return res.status(401).json({ message: '请先登录' });
         }

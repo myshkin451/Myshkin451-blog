@@ -1,7 +1,14 @@
 const { User, Post, Comment } = require('../models');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken'); 
+const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
+
+const COOKIE_OPTIONS = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000, // 1 天
+};
 
 
 // 注册新用户
@@ -33,14 +40,14 @@ exports.register = async (req, res) => {
             { expiresIn: '1d' }
         );
 
+        res.cookie('token', token, COOKIE_OPTIONS);
         res.status(201).json({
             message: '注册成功',
-            token,
             user: {
                 id: user.id,
                 username: user.username,
                 email: user.email,
-                isAdmin: user.isAdmin 
+                isAdmin: user.isAdmin
             }
         });
     } catch (error) {
@@ -74,14 +81,14 @@ exports.login = async (req, res) => {
             { expiresIn: '1d' }
         );
 
+        res.cookie('token', token, COOKIE_OPTIONS);
         res.json({
             message: '登录成功',
-            token,
             user: {
                 id: user.id,
                 username: user.username,
                 email: user.email,
-                isAdmin: user.isAdmin 
+                isAdmin: user.isAdmin
             }
         });
     } catch (error) {
@@ -245,7 +252,7 @@ exports.getUserComments = async (req, res) => {
             order: [['createdAt', 'DESC']]
         });
         
-        res.json({ 
+        res.json({
             comments: comments.map(comment => ({
                 id: comment.id,
                 content: comment.content,
@@ -257,4 +264,14 @@ exports.getUserComments = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: '服务器错误', error: error.message });
     }
+};
+
+// 用户登出
+exports.logout = (req, res) => {
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+    });
+    res.json({ message: '登出成功' });
 };

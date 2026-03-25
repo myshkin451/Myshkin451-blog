@@ -182,19 +182,17 @@
   
   // 初始化检查登录状态
   const checkLoginStatus = () => {
-    const token = localStorage.getItem('token');
-    isLoggedIn.value = !!token;
-    
-    // 这里应该从localStorage或状态管理中获取用户ID
-    // 假设用户信息存储在localStorage的user字段中
     try {
       const userStr = localStorage.getItem('user');
       if (userStr) {
         const user = JSON.parse(userStr);
+        isLoggedIn.value = true;
         currentUserId.value = user.id;
+      } else {
+        isLoggedIn.value = false;
       }
     } catch (e) {
-      console.error('解析用户信息失败', e);
+      isLoggedIn.value = false;
     }
   };
   
