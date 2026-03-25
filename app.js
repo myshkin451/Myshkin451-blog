@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const dotenv = require('dotenv');
 const { sequelize, syncDatabase } = require('./models');
 const routes = require('./routes');
@@ -17,6 +18,7 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 
 // 中间件
+app.use(helmet());
 app.use(cors());
 app.use(globalLimiter);
 app.use(express.json());

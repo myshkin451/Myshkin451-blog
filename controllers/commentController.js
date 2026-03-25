@@ -2,6 +2,7 @@ const Comment = require('../models/Comment');
 const Post = require('../models/Post');
 const User = require('../models/User');
 const { Op } = require('sequelize');
+const { stripHtml } = require('../middlewares/sanitize');
 
 // 获取文章的所有评论（嵌套结构）
 exports.getPostComments = async (req, res) => {
@@ -75,7 +76,7 @@ exports.createComment = async (req, res) => {
 		
 		// 创建评论
 		const comment = await Comment.create({
-			content,
+			content: stripHtml(content),
 			userId,
 			postId,
 			parentId: parentId || null
@@ -115,7 +116,7 @@ exports.updateComment = async (req, res) => {
 		}
 		
 		// 更新评论
-		comment.content = content;
+		comment.content = stripHtml(content);
 		await comment.save();
 		
 		res.json(comment);

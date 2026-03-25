@@ -1,4 +1,5 @@
 const { Post, User, Category, Tag } = require('../models');
+const { stripHtml, sanitizeContent } = require('../middlewares/sanitize');
 
 // 获取所有文章
 exports.getAllPosts = async (req, res) => {
@@ -62,9 +63,9 @@ exports.createPost = async (req, res) => {
         const { title, content, excerpt, status, categoryId, tagIds, coverImage, createdAt } = req.body;
 
         const postData = {
-            title,
-            content,
-            excerpt,
+            title: stripHtml(title),
+            content: sanitizeContent(content),
+            excerpt: stripHtml(excerpt),
             status: status || 'draft',
             userId: req.user.id,
             categoryId: categoryId || null,
@@ -109,10 +110,10 @@ exports.updatePost = async (req, res) => {
             return res.status(403).json({ message: '没有权限修改此文章' });
         }
     
-        // 设置常规字段 改用直接赋值，比构建 updateData 对象更直观
-        post.title = title;
-        post.content = content;
-        post.excerpt = excerpt;
+        // 设置常规字段
+        post.title = stripHtml(title);
+        post.content = sanitizeContent(content);
+        post.excerpt = stripHtml(excerpt);
         post.status = status;
         post.categoryId = categoryId || post.categoryId;
         post.coverImage = coverImage;
