@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 2，步骤 2A.1（阶段 1 已全部完成）
+> **下一步：** 阶段 2，步骤 2B.1（2A 已全部完成）
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -137,17 +137,17 @@
 
 ### 2A. 错误处理 & 响应格式
 
-- [ ] **2A.1 创建统一错误类**
+- [x] **2A.1 创建统一错误类**
   - 新建 `utils/AppError.js` — 自定义错误类，含 `statusCode`、`code`、`message`
   - 新建 `utils/catchAsync.js` — controller 异步包装器，消除重复 try/catch
   - 预定义：`NotFoundError`、`ValidationError`、`UnauthorizedError`、`ForbiddenError`
 
-- [ ] **2A.2 创建统一响应工具**
+- [x] **2A.2 创建统一响应工具**
   - 新建 `utils/response.js`
   - 统一格式：`{ success, data, message, pagination? }`
   - 封装 `success(res, data, message)` / `error(res, err)`
 
-- [ ] **2A.3 重写全局错误中间件**
+- [x] **2A.3 重写全局错误中间件**
   - `app.js` 中 error handler 改用 AppError 分类处理
   - 开发环境返回 stack trace，生产环境只返回安全信息
 
@@ -196,6 +196,10 @@
 **阶段 2 验证：** `npm run dev` 启动无报错 + 所有 API 返回统一格式 `{ success, data, message }` + 列表接口返回 `pagination` + slug 不再包含随机数
 
 **阶段 2 备注：**
+- 2A: 新建 utils/ 目录，含 AppError.js（5 个错误子类）、catchAsync.js、response.js（success/paginated/created）
+- 2A.3: 全局错误中间件区分 AppError（业务错误）、Sequelize 错误、JSON 解析错误、未知错误；生产环境隐藏 stack
+- 2A.3: 顺带移除了 app.js 末尾重复的 express.json/urlencoded 调用（位于错误处理之后，从未生效）
+- 2A: 此阶段仅建立基础设施，controller 尚未改用新工具（2B 阶段执行）
 
 ---
 
@@ -370,7 +374,7 @@
 | ------ | ------ | -------- | -------- | ---------- |
 | 阶段 0 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
 | 阶段 1 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
-| 阶段 2 | 未开始 |          |          |            |
+| 阶段 2 | 进行中 | 2026-03-25 |          |            |
 | 阶段 3 | 未开始 |          |          |            |
 | 阶段 4 | 未开始 |          |          |            |
 | 阶段 5 | 未开始 |          |          |            |
