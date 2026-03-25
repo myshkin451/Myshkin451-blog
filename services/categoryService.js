@@ -1,0 +1,61 @@
+const { Category, Post, User, Tag } = require('../models');
+const { NotFoundError } = require('../utils/AppError');
+
+exports.getAllCategories = async () => {
+  const categories = await Category.findAll({
+    include: [{
+      model: Post, as: 'posts', attributes: ['id'],
+      where: { status: 'published' }, required: false,
+    }],
+    order: [['name', 'ASC']],
+  });
+
+  return categories.map((c) => ({
+    id: c.id, name: c.name, slug: c.slug, description: c.description,
+    postCount: c.posts ? c.posts.length : 0,
+    createdAt: c.createdAt, updatedAt: c.updatedAt,
+  }));
+};
+
+exports.getCategoryById = async (id) => {
+  const category = await Category.findByPk(id, {
+    include: { model: Post, as: 'posts', attributes: ['id', 'title', 'slug', 'excerpt', 'createdAt'] },
+  });
+  if (!category) throw new NotFoundError('分类不存在');
+  return category;
+};
+
+exports.getCategoryBySlug = async (slug) => {
+  const category = await Category.findOne({
+    where: { slug },
+    include: {
+      model: Post, as: 'posts',
+      include: [
+        { model: User, as: 'author', attributes: ['id', 'username', 'avatar'] },
+        { model: Tag, as: 'tags', attributes: ['id', 'name', 'slug'], through: { attributes: [] } },
+      ],
+      where: { status: 'published' },
+      attributes: ['id', 'title', 'slug', 'content', 'excerpt', 'createdAt', 'viewCount', 'coverImage'],
+      order: [['createdAt', 'DESC']],
+    },
+  });
+  if (!category) throw new NotFoundError('分类不存在');
+  return category;
+};
+
+exports.createCategory = async ({ name, description }) => {
+  return Category.create({ name, description });
+};
+
+exports.updateCategory = async (id, { name, description }) => {
+  const category = await Category.findByPk(id);
+  if (!category) throw new NotFoundError('分类不存在');
+  await category.update({ name, description });
+  return category;
+};
+
+exports.deleteCategory = async (id) => {
+  const category = await Category.findByPk(id);
+  if (!category) throw new NotFoundError('分类不存在');
+  await category.destroy();
+};
