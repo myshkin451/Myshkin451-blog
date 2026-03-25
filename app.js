@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { sequelize, syncDatabase } = require('./models');
 const routes = require('./routes');
+const { globalLimiter } = require('./middlewares/rateLimiter');
 
 // 加载环境变量
 dotenv.config();
@@ -17,6 +18,7 @@ const app = express();
 
 // 中间件
 app.use(cors());
+app.use(globalLimiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
