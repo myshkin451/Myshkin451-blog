@@ -111,7 +111,6 @@
     try {
       const response = await api.getTags();
       tags.value = response || [];
-      console.log('获取到的标签:', tags.value);
     } catch (error) {
       console.error('获取标签失败:', error);
       tags.value = [];

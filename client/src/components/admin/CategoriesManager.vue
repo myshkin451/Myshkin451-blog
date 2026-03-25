@@ -130,7 +130,6 @@
     try {
       const response = await api.getCategories();
       categories.value = response || [];
-      console.log('获取到的分类:', categories.value);
     } catch (error) {
       console.error('获取分类失败:', error);
       categories.value = [];

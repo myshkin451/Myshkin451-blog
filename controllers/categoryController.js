@@ -119,8 +119,6 @@ exports.deleteCategory = async (req, res) => {
 exports.getCategoryBySlug = async (req, res) => {
     try {
         const slug = req.params.slug;
-        console.log(`查询分类slug: ${slug}`);
-        
         const category = await Category.findOne({
         where: { slug },
         include: {
@@ -146,11 +144,9 @@ exports.getCategoryBySlug = async (req, res) => {
         });
         
         if (!category) {
-        console.log(`未找到分类: ${slug}`);
         return res.status(404).json({ message: '分类不存在' });
         }
         
-        console.log(`找到分类: ${category.name}, 文章数: ${category.posts?.length || 0}`);
         res.json(category);
     } catch (error) {
         console.error('获取分类详情失败:', error);

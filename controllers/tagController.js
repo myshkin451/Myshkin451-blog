@@ -120,8 +120,6 @@ exports.deleteTag = async (req, res) => {
     exports.getTagBySlug = async (req, res) => {
         try {
         const slug = req.params.slug;
-        console.log(`查询标签slug: ${slug}`);
-        
         const tag = await Tag.findOne({
             where: { slug },
             include: {
@@ -152,11 +150,9 @@ exports.deleteTag = async (req, res) => {
         });
         
         if (!tag) {
-            console.log(`未找到标签: ${slug}`);
             return res.status(404).json({ message: '标签不存在' });
         }
         
-        console.log(`找到标签: ${tag.name}, 文章数: ${tag.posts?.length || 0}`);
         res.json(tag);
         } catch (error) {
         console.error('获取标签详情失败:', error);

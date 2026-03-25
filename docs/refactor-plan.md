@@ -14,9 +14,9 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 0，步骤 0.1
+> **下一步：** 阶段 1，步骤 1A.1
 >
-> 每次完成一个阶段后更新此区块，写明下一步目标，供新 session 快速定位。
+> 阶段 0 已于 2026-03-25 全部完成。
 
 ---
 
@@ -24,11 +24,11 @@
 
 > 目标：清理噪音、锁定基线，让后续每个阶段的 diff 干净可读。
 
-- [ ] **0.1 禁用 CI/CD 自动触发**
+- [x] **0.1 禁用 CI/CD 自动触发**
   - `.github/workflows/ci-cd.yml`：去掉 `push` 触发，仅保留 `workflow_dispatch`
   - 原因：ECS 已过期，每次 push 白跑 build + deploy 必定失败
 
-- [ ] **0.2 清理死代码和冗余文件**
+- [x] **0.2 清理死代码和冗余文件**
   - 删除 `testDb.js`、`fixSlugs.js`
   - 删除 `client/src/components/HelloWorld.vue`
   - 确认 `ArticleCard.vue` vs `ArticleCardV2.vue` 哪个在用，删除多余的
@@ -36,17 +36,23 @@
   - 清理所有 `console.log`（保留 `console.error` 用于真正的错误）
   - 删除 `.DS_Store`，加入 `.gitignore`
 
-- [ ] **0.3 修复后端 package.json**
+- [x] **0.3 修复后端 package.json**
   - 移除不属于后端的依赖：`@bytemd/*`、`bytemd`、`highlight.js`、`markdown-it`
   - 这些是前端库，后端不应引用
 
-- [ ] **0.4 统一代码风格基础设施**
+- [x] **0.4 统一代码风格基础设施**
   - 添加 `.editorconfig`
   - 可选：ESLint + Prettier（可在阶段 1 一起加）
 
 **阶段 0 验证：** `npm run dev` 和 `cd client && npm run build` 无报错即可（仅删文件/改配置，不涉及功能）
 
 **阶段 0 备注：**
+- 0.2: `ArticleCard.vue` 和 `ArticleCardV2.vue` 均在使用中（分别用于列表页和首页），保留两者，合并工作留到阶段 3B.1
+- 0.2: `PlaceholderView.vue` 是 `/guestbook` 路由的临时占位组件，属未完成功能，保留
+- 0.2: `.DS_Store` 已从 git 追踪中移除（`.gitignore` 原已包含该规则，但文件之前已被提交）
+- 0.2: 保留了启动/运维脚本中的 `console.log`（app.js, scripts/, config/database.js, models/index.js）
+- 0.4: ESLint + Prettier 留到阶段 1 一起加
+- 验证：`cd client && npm run build` 构建成功
 
 ---
 
@@ -357,7 +363,7 @@
 
 | 阶段   | 状态   | 开始日期 | 完成日期 | Session 数 |
 | ------ | ------ | -------- | -------- | ---------- |
-| 阶段 0 | 未开始 |          |          |            |
+| 阶段 0 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
 | 阶段 1 | 未开始 |          |          |            |
 | 阶段 2 | 未开始 |          |          |            |
 | 阶段 3 | 未开始 |          |          |            |

@@ -486,11 +486,9 @@
 // 获取用户文章
 const fetchUserPosts = async () => {
   try {
-    console.log('开始获取用户文章...');
     loadingPosts.value = true;
     
     const response = await api.getUserPosts();
-    console.log('获取到的用户文章:', response);
     userPosts.value = response.posts || [];
     
   } catch (err) {
@@ -504,11 +502,9 @@ const fetchUserPosts = async () => {
 // 获取用户评论
 const fetchUserComments = async () => {
   try {
-    console.log('开始获取用户评论...');
     loadingComments.value = true;
     
     const response = await api.getUserComments();
-    console.log('获取到的用户评论:', response);
     userComments.value = response.comments || [];
     
   } catch (err) {
@@ -593,13 +589,9 @@ const fetchUserComments = async () => {
 
 // 监听标签变化
 watch(activeTab, (newTab, oldTab) => {
-  console.log('标签切换:', oldTab, '->', newTab);
-  
   if (newTab === 'posts') {
-    console.log('加载用户文章');
     fetchUserPosts();
   } else if (newTab === 'comments') {
-    console.log('加载用户评论');
     fetchUserComments();
   }
 });

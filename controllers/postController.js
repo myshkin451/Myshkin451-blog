@@ -93,9 +93,6 @@ exports.createPost = async (req, res) => {
 
 exports.updatePost = async (req, res) => {
     try {
-        console.log('--- UPDATE REQUEST RECEIVED ---'); 
-        console.log('Target createdAt:', req.body.createdAt);
-        
         const { title, content, excerpt, status, categoryId, tagIds, coverImage, createdAt } = req.body;
         const post = await Post.findByPk(req.params.id);
     
@@ -119,7 +116,6 @@ exports.updatePost = async (req, res) => {
         // 普通的 update() 会被 Sequelize 过滤，必须用 setDataValue 绕过保护
         if (createdAt) {
             post.setDataValue('createdAt', createdAt);
-            console.log('>>> FORCE UPDATING createdAt to:', createdAt);
         }
     
         // 执行保存

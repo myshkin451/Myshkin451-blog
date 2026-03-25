@@ -113,7 +113,6 @@ const fetchPosts = async () => {
     const response = await api.getPosts();
     posts.value = Array.isArray(response) ? response : 
                  (response.posts ? response.posts : []);
-    console.log('获取到的文章:', posts.value);
   } catch (error) {
     console.error('获取文章失败:', error);
     posts.value = [];

@@ -184,7 +184,6 @@ const fetchTagDetails = async () => {
       }
     });
     
-    console.log('处理后的标签详情:', tag.value);
   } catch (err) {
     console.error('获取标签详情失败:', err);
     error.value = '获取标签详情失败，请稍后重试';

@@ -145,7 +145,6 @@
     try {
       const response = await api.getAllComments(statusFilter.value);
       comments.value = response.comments || [];
-      console.log('获取到的评论:', comments.value);
     } catch (error) {
       console.error('获取评论失败:', error);
       comments.value = [];
