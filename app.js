@@ -8,13 +8,14 @@ const routes = require('./routes');
 const { globalLimiter } = require('./middlewares/rateLimiter');
 const csrfProtection = require('./middlewares/csrf');
 const { AppError } = require('./utils/AppError');
+const logger = require('./utils/logger');
 
 // 加载环境变量
 dotenv.config();
 
 // 启动前校验必需的环境变量
 if (!process.env.JWT_SECRET) {
-  console.error('致命错误：环境变量 JWT_SECRET 未设置。请在 .env 文件中配置后重启。');
+  logger.fatal('环境变量 JWT_SECRET 未设置。请在 .env 文件中配置后重启。');
   process.exit(1);
 }
 
@@ -32,6 +33,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 app.use('/api', csrfProtection);
+
+// 请求日志
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    logger.info({
+      method: req.method, url: req.originalUrl,
+      status: res.statusCode, ms: Date.now() - start,
+    });
+  });
+  next();
+});
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date() });
@@ -81,7 +94,7 @@ app.use((err, req, res, next) => {
   }
 
   // 未知错误 — 生产环境隐藏细节
-  console.error('Unhandled error:', err);
+  logger.error({ err, method: req.method, url: req.originalUrl }, 'Unhandled error');
   res.status(500).json({
     success: false,
     message: process.env.NODE_ENV === 'development' ? err.message : '服务器内部错误',
@@ -95,7 +108,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   // 同步数据库
   await syncDatabase();
-  console.log(`服务器在 http://localhost:${PORT} 运行中`);
+  logger.info(`服务器在 http://localhost:${PORT} 运行中`);
 });
 
 module.exports = app;

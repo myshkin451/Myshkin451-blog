@@ -1,13 +1,13 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
+const logger = require('../utils/logger');
 const { sequelize, User, Category, Tag, syncDatabase } = require('../models');
 
 async function init() {
   try {
-    // 使用已有的syncDatabase函数
     await syncDatabase();
-    console.log('✅ 数据库表结构同步完成');
+    logger.info('数据库表结构同步完成');
 
     // 创建默认管理员
     const [admin, created] = await User.findOrCreate({
@@ -20,7 +20,7 @@ async function init() {
       },
     });
 
-    console.log(created ? '✅ 管理员账户已创建' : 'ℹ️  管理员账户已存在');
+    logger.info(created ? '管理员账户已创建' : '管理员账户已存在');
 
     // 创建默认分类（可选）
     const [defaultCategory] = await Category.findOrCreate({
@@ -31,10 +31,10 @@ async function init() {
       }
     });
 
-    console.log('✅ 默认分类已准备');
+    logger.info('默认分类已准备');
 
   } catch (err) {
-    console.error('❌ 初始化失败:', err.message);
+    logger.error({ err }, '初始化失败');
     process.exit(1);
   } finally {
     await sequelize.close();

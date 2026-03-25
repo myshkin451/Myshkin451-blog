@@ -83,12 +83,13 @@ Comment.belongsTo(Comment, {
 
 // 数据库 schema 变更通过 migrations 管理，不再使用 sync({ alter: true })
 // 运行 migration: npx sequelize-cli db:migrate
+const logger = require('../utils/logger');
 const syncDatabase = async () => {
     try {
         await sequelize.authenticate();
-        console.log('数据库连接成功');
+        logger.info('数据库连接成功');
     } catch (error) {
-        console.error('数据库连接失败:', error);
+        logger.error({ err: error }, '数据库连接失败');
     }
 };
 
