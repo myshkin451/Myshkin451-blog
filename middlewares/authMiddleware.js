@@ -34,9 +34,12 @@ exports.protect = async (req, res, next) => {
 };
 
 // 验证管理员权限
-exports.admin = (req, res, next) => {
+const requireAdmin = (req, res, next) => {
     if (!req.user || !req.user.isAdmin) {
         return res.status(403).json({ message: '需要管理员权限' });
     }
     next();
 };
+
+exports.admin = requireAdmin;
+exports.requireAdmin = requireAdmin;

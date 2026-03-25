@@ -83,10 +83,14 @@ exports.uploadPostImage = async (req, res) => {
 };
 
 /**
- * 删除文章图片文件
+ * 删除文章图片文件（仅管理员可操作）
  */
 exports.deletePostImage = async (req, res) => {
   try {
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ message: '仅管理员可删除图片文件' });
+    }
+
     const { filename } = req.params;
     if (filename.includes('..') || filename.includes('/'))
       return res.status(400).json({ message: '无效的文件名' });

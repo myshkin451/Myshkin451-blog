@@ -28,7 +28,7 @@ exports.register = async (req, res) => {
         
         // 生成JWT令牌
         const token = jwt.sign(
-            { id: user.id, username: user.username },
+            { id: user.id, username: user.username, isAdmin: user.isAdmin },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
@@ -69,7 +69,7 @@ exports.login = async (req, res) => {
         
         // 生成JWT令牌
         const token = jwt.sign(
-            { id: user.id, username: user.username },
+            { id: user.id, username: user.username, isAdmin: user.isAdmin },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );

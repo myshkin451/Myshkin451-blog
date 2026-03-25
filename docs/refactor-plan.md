@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 1，步骤 1A.3
+> **下一步：** 阶段 1，步骤 1B.1
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -73,7 +73,7 @@
   - 问题：`createPost`/`updatePost` 接受用户传入的 `createdAt`，用 `setDataValue()` 绕过 Sequelize 时间戳保护
   - 方案：仅 admin 可设置 `createdAt`，普通用户提交的直接忽略
 
-- [ ] **1A.3 强化授权中间件**
+- [x] **1A.3 强化授权中间件**
   - 文件：`middlewares/authMiddleware.js`、各 `routes/*.js`
   - 在 `authMiddleware` 中新增 `requireAdmin` 中间件，从 JWT payload 验证角色
   - 所有管理接口必须使用
