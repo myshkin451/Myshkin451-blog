@@ -287,6 +287,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useAuthStore } from '../stores/auth';
 import Navbar from '../components/Navbar.vue';
 import ArticleCardV2 from '../components/ArticleCardV2.vue';
 import Pagination from '../components/Pagination.vue';
@@ -300,7 +302,7 @@ const loading = ref(true);
 const currentPage = ref(1);
 const totalPages = ref(1);
 const categories = ref([]);
-const isAdmin = ref(false);
+const { isAdmin } = storeToRefs(useAuthStore());
 
 const onMouseMove = (e) => {
   const el = rootRef.value;
@@ -308,16 +310,6 @@ const onMouseMove = (e) => {
   const rect = el.getBoundingClientRect();
   el.style.setProperty('--mx', `${e.clientX - rect.left}px`);
   el.style.setProperty('--my', `${e.clientY - rect.top}px`);
-};
-
-const checkAdminStatus = () => {
-  const userStr = localStorage.getItem('user');
-  if (userStr) {
-    try {
-      const userData = JSON.parse(userStr);
-      isAdmin.value = userData.isAdmin === true || userData.role === 'admin';
-    } catch (e) {}
-  }
 };
 
 const fetchPosts = async (page = 1) => {
@@ -358,7 +350,6 @@ const handlePageChange = (page) => {
 onMounted(() => {
   fetchPosts();
   fetchCategories();
-  checkAdminStatus();
 });
 </script>
 

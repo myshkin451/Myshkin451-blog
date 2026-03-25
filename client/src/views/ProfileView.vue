@@ -362,6 +362,7 @@
   <script setup>
   import { ref, reactive, onMounted, watch} from 'vue';
   import { useRouter } from 'vue-router';
+  import { useAuthStore } from '../stores/auth';
   import Navbar from '../components/Navbar.vue';
   import Footer from '../components/Footer.vue';
   import ImageUploader from '../components/ImageUploader.vue';
@@ -401,38 +402,33 @@
     try {
       loading.value = true;
       error.value = null;
-      
-      // 检查本地存储中的用户数据
-      const userJSON = localStorage.getItem('user');
-      if (!userJSON) {
+
+      const authStore = useAuthStore();
+      if (!authStore.isLoggedIn) {
         router.push('/login?redirect=/profile');
         return;
       }
-      
+
       // 尝试从API获取最新用户资料
       const response = await api.getUserProfile();
       user.value = response.user;
-      
+
       // 填充表单数据
       profileForm.username = user.value.username || '';
       profileForm.email = user.value.email || '';
       profileForm.bio = user.value.bio || '';
-      
+
     } catch (err) {
       console.error('获取用户资料失败:', err);
       error.value = '获取用户资料失败，请重试';
-      
-      // 尝试使用本地存储的用户数据作为后备
-      try {
-        const userJSON = localStorage.getItem('user');
-        if (userJSON) {
-          user.value = JSON.parse(userJSON);
-          profileForm.username = user.value.username || '';
-          profileForm.email = user.value.email || '';
-          profileForm.bio = user.value.bio || '';
-        }
-      } catch (e) {
-        console.error('解析本地用户数据失败:', e);
+
+      // 使用 store 中的用户数据作为后备
+      const authStore = useAuthStore();
+      if (authStore.user) {
+        user.value = { ...authStore.user };
+        profileForm.username = user.value.username || '';
+        profileForm.email = user.value.email || '';
+        profileForm.bio = user.value.bio || '';
       }
     } finally {
       loading.value = false;
@@ -452,7 +448,7 @@
       
       // 更新本地用户数据
       user.value = response.user;
-      localStorage.setItem('user', JSON.stringify(user.value));
+      useAuthStore().setUser(user.value);
       
       // 退出编辑模式
       isEditing.value = false;
@@ -469,16 +465,7 @@
   const handleAvatarUpload = (avatarUrl) => {
     if (user.value) {
       user.value.avatar = avatarUrl;
-      
-      // 更新本地存储
-      const userJSON = localStorage.getItem('user');
-      if (userJSON) {
-        const userData = JSON.parse(userJSON);
-        userData.avatar = avatarUrl;
-        localStorage.setItem('user', JSON.stringify(userData));
-      }
-      
-      // 切换回个人资料标签
+      useAuthStore().updateUser({ avatar: avatarUrl });
       activeTab.value = 'profile';
     }
   };

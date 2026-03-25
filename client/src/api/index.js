@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../stores/auth';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -153,7 +154,7 @@ const apiService = {
 
       // token 已通过 HttpOnly Cookie 设置，仅存储用户信息用于 UI 展示
       if (response.data.user) {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        useAuthStore().setUser(response.data.user);
       }
 
       return response.data;
@@ -169,7 +170,7 @@ const apiService = {
       const response = await api.post('/users/register', userData);
 
       if (response.data.user) {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        useAuthStore().setUser(response.data.user);
       }
 
       return response.data;
@@ -351,7 +352,7 @@ async uploadPostImage(formData) {
     } catch {
       // 即使请求失败也清除本地状态
     }
-    localStorage.removeItem('user');
+    useAuthStore().clearUser();
   },
 
 // 获取管理统计数据

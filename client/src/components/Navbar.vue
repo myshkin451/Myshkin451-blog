@@ -177,23 +177,28 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { storeToRefs } from 'pinia';
+import { useAuthStore } from '../stores/auth';
+import { useUiStore } from '../stores/ui';
 import SearchBar from './SearchBar.vue';
 
 const router = useRouter();
 const route = useRoute();
 
+const authStore = useAuthStore();
+const uiStore = useUiStore();
+
+const { isLoggedIn, isAdmin, user } = storeToRefs(authStore);
+const { isDark } = storeToRefs(uiStore);
+
+const userName = computed(() => user.value?.username || '用户');
+const userAvatar = computed(() => user.value?.avatar || null);
+
 const showMobileMenu = ref(false);
 const showProfileMenu = ref(false);
 const profileMenuRef = ref(null);
-const isDark = ref(false);
-
-const isLoggedIn = ref(false);
-const userName = ref('用户');
-const userAvatar = ref(null);
-const isAdmin = ref(false);
-
 const scrollProgress = ref(0);
 
 const navLinkBase = 'inline-flex items-center rounded-md px-2 py-1.5 text-sm transition-colors';
@@ -223,48 +228,11 @@ const mobileLinkClass = (path) => {
   ].join(' ');
 };
 
-const toggleTheme = () => {
-  isDark.value = !isDark.value;
-  if (isDark.value) {
-    document.documentElement.classList.add('dark');
-    localStorage.setItem('theme', 'dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-    localStorage.setItem('theme', 'light');
-  }
-};
-
-const checkUserStatus = () => {
-  try {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) {
-      isLoggedIn.value = false;
-      userName.value = '用户';
-      userAvatar.value = null;
-      isAdmin.value = false;
-      return;
-    }
-    const userData = JSON.parse(userStr);
-    isLoggedIn.value = true;
-    userName.value = userData.username || '用户';
-    userAvatar.value = userData.avatar || null;
-    isAdmin.value = userData.isAdmin === true || userData.role === 'admin';
-  } catch (e) {
-    isLoggedIn.value = false;
-    userName.value = '用户';
-    userAvatar.value = null;
-    isAdmin.value = false;
-  }
-};
+const toggleTheme = () => uiStore.toggleTheme();
 
 const logout = async () => {
   const { default: apiService } = await import('../api/index.js');
   await apiService.logout();
-
-  isLoggedIn.value = false;
-  userName.value = '用户';
-  userAvatar.value = null;
-  isAdmin.value = false;
 
   showProfileMenu.value = false;
   showMobileMenu.value = false;
@@ -279,10 +247,6 @@ const handleClickOutside = (event) => {
   if (profileMenuRef.value && !profileMenuRef.value.contains(event.target)) {
     showProfileMenu.value = false;
   }
-};
-
-const handleStorageChange = (event) => {
-  if (event.key === 'token' || event.key === 'user') checkUserStatus();
 };
 
 const handleScroll = () => {
@@ -302,27 +266,13 @@ watch(
 );
 
 onMounted(() => {
-  const savedTheme = localStorage.getItem('theme');
-  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
-    isDark.value = true;
-    document.documentElement.classList.add('dark');
-  } else {
-    isDark.value = false;
-    document.documentElement.classList.remove('dark');
-  }
-
-  checkUserStatus();
   handleScroll();
-
   document.addEventListener('click', handleClickOutside);
-  window.addEventListener('storage', handleStorageChange);
   window.addEventListener('scroll', handleScroll, { passive: true });
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
-  window.removeEventListener('storage', handleStorageChange);
   window.removeEventListener('scroll', handleScroll);
 });
 </script>

@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 3，步骤 3A.1（阶段 2 已全部完成）
+> **下一步：** 阶段 3，步骤 3A.2（3A.1 已完成）
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -213,7 +213,7 @@
 
 ### 3A. 状态管理
 
-- [ ] **3A.1 引入 Pinia**
+- [x] **3A.1 引入 Pinia**
   - 新建 `client/src/stores/`
   - `stores/auth.js` — token、用户信息、登录/登出
   - `stores/ui.js` — 主题、全局 loading
@@ -267,6 +267,7 @@
 **阶段 3 验证：** `cd client && npm run dev` 启动无报错 + `npm run build` 构建成功 + 登录/登出/发文/浏览/管理后台页面功能正常
 
 **阶段 3 备注：**
+- 3A.1: 引入 Pinia，新建 stores/auth.js（user state + hydrate/setUser/updateUser/clearUser）和 stores/ui.js（theme + globalLoading）；main.js 注册 Pinia 并在挂载前 hydrate；所有组件中的 localStorage 操作已迁移至 store（23 处 → 0 处，仅 stores 内部访问 localStorage）；路由守卫改用 auth store 判断登录/admin 状态；验证：`npm run build` 构建通过
 
 ---
 
@@ -379,7 +380,7 @@
 | 阶段 0 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
 | 阶段 1 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
 | 阶段 2 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
-| 阶段 3 | 未开始 |          |          |            |
+| 阶段 3 | 进行中 | 2026-03-25 |          |            |
 | 阶段 4 | 未开始 |          |          |            |
 | 阶段 5 | 未开始 |          |          |            |
 | 阶段 6 | 未开始 |          |          |            |

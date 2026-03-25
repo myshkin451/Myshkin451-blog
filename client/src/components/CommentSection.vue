@@ -59,9 +59,11 @@
   
   <script setup>
   import { ref, computed, onMounted } from 'vue';
+  import { storeToRefs } from 'pinia';
+  import { useAuthStore } from '../stores/auth';
   import CommentItem from './CommentItem.vue';
   import api from '../api';
-  
+
   // Props
   const props = defineProps({
     postId: {
@@ -69,13 +71,14 @@
       required: true
     }
   });
-  
+
+  const { isLoggedIn } = storeToRefs(useAuthStore());
+
   // 状态
   const comments = ref([]);
   const loading = ref(true);
   const newComment = ref('');
   const submitting = ref(false);
-  const isLoggedIn = ref(false); // 这应该从全局状态或localStorage中获取
   
   // 计算属性
   const totalComments = computed(() => {
@@ -123,14 +126,8 @@
     }
   };
   
-  // 检查用户登录状态
-  const checkLoginStatus = () => {
-    isLoggedIn.value = !!localStorage.getItem('user');
-  };
-  
   // 生命周期钩子
   onMounted(() => {
     fetchComments();
-    checkLoginStatus();
   });
   </script>

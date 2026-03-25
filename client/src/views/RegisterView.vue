@@ -90,6 +90,7 @@
   <script setup>
   import { ref, computed, onMounted } from 'vue';
   import { useRouter } from 'vue-router';
+  import { useAuthStore } from '../stores/auth';
   import Navbar from '../components/Navbar.vue';
   import Footer from '../components/Footer.vue';
   import api from '../api';
@@ -148,7 +149,7 @@
   
   // 检查是否已登录
   onMounted(() => {
-    if (localStorage.getItem('user')) {
+    if (useAuthStore().isLoggedIn) {
       router.push('/');
     }
   });

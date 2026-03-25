@@ -152,6 +152,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
 import Navbar from '../components/Navbar.vue';
 import Footer from '../components/Footer.vue';
 import MarkdownEditor from '../components/MarkdownEditor.vue';
@@ -295,11 +296,8 @@ const fetchData = async () => {
 };
 
 onMounted(async () => {
-  const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : null;
-  const isAdmin = user && (user.isAdmin === true || user.role === 'admin');
-  
-  if (!isAdmin) {
+  const auth = useAuthStore();
+  if (!auth.isAdmin) {
     router.push('/');
     return;
   }

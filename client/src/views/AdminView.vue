@@ -65,6 +65,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
 import Navbar from '../components/Navbar.vue';
 import Footer from '../components/Footer.vue';
 import StatCard from '../components/admin/StatCard.vue';
@@ -98,21 +99,13 @@ const tabs = [
 
 // 检查管理员权限
 const checkAdminAccess = () => {
-  const userStr = localStorage.getItem('user');
-  if (!userStr) {
+  const auth = useAuthStore();
+  if (!auth.isLoggedIn) {
     router.push('/login?redirect=/admin');
     return;
   }
-  
-  try {
-    const userData = JSON.parse(userStr);
-    if (!userData.isAdmin) {
-      alert('您没有管理员权限');
-      router.push('/');
-    }
-  } catch (e) {
-    console.error('解析用户数据失败:', e);
-    router.push('/login?redirect=/admin');
+  if (!auth.isAdmin) {
+    router.push('/');
   }
 };
 

@@ -152,8 +152,10 @@
   
   <script setup>
   import { ref, computed } from 'vue';
+  import { storeToRefs } from 'pinia';
+  import { useAuthStore } from '../stores/auth';
   import api from '../api';
-  
+
   // Props
   const props = defineProps({
     comment: {
@@ -165,39 +167,18 @@
       required: true
     }
   });
-  
+
   // Emits
   const emit = defineEmits(['refresh']);
-  
+
+  const { isLoggedIn, currentUserId } = storeToRefs(useAuthStore());
+
   // 状态
   const isEditing = ref(false);
   const editContent = ref(props.comment.content || '');
   const showReplyForm = ref(false);
   const replyContent = ref('');
   const submitting = ref(false);
-  
-  // 用户相关状态（应从全局状态或本地存储获取）
-  const currentUserId = ref(null); // 这里应该从认证状态中获取当前用户ID
-  const isLoggedIn = ref(false);
-  
-  // 初始化检查登录状态
-  const checkLoginStatus = () => {
-    try {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        isLoggedIn.value = true;
-        currentUserId.value = user.id;
-      } else {
-        isLoggedIn.value = false;
-      }
-    } catch (e) {
-      isLoggedIn.value = false;
-    }
-  };
-  
-  // 调用初始化函数
-  checkLoginStatus();
   
   // 计算属性
   const canEdit = computed(() => {
