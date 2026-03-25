@@ -1,18 +1,25 @@
 const { Tag, Post, User, Category } = require('../models');
+const { sequelize } = require('../models');
 const { NotFoundError } = require('../utils/AppError');
 
 exports.getAllTags = async () => {
   const tags = await Tag.findAll({
-    include: [{
-      model: Post, as: 'posts', attributes: ['id'],
-      where: { status: 'published' }, required: false,
-    }],
+    attributes: {
+      include: [
+        [
+          sequelize.literal(
+            '(SELECT COUNT(*) FROM post_tags INNER JOIN posts ON posts.id = post_tags.postId WHERE post_tags.tagId = Tag.id AND posts.status = \'published\')'
+          ),
+          'postCount',
+        ],
+      ],
+    },
     order: [['name', 'ASC']],
   });
 
   return tags.map((t) => ({
     id: t.id, name: t.name, slug: t.slug,
-    postCount: t.posts ? t.posts.length : 0,
+    postCount: parseInt(t.getDataValue('postCount'), 10),
     createdAt: t.createdAt, updatedAt: t.updatedAt,
   }));
 };

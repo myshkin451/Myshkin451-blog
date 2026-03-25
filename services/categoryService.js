@@ -1,18 +1,25 @@
 const { Category, Post, User, Tag } = require('../models');
+const { sequelize } = require('../models');
 const { NotFoundError } = require('../utils/AppError');
 
 exports.getAllCategories = async () => {
   const categories = await Category.findAll({
-    include: [{
-      model: Post, as: 'posts', attributes: ['id'],
-      where: { status: 'published' }, required: false,
-    }],
+    attributes: {
+      include: [
+        [
+          sequelize.literal(
+            '(SELECT COUNT(*) FROM posts WHERE posts.categoryId = Category.id AND posts.status = \'published\')'
+          ),
+          'postCount',
+        ],
+      ],
+    },
     order: [['name', 'ASC']],
   });
 
   return categories.map((c) => ({
     id: c.id, name: c.name, slug: c.slug, description: c.description,
-    postCount: c.posts ? c.posts.length : 0,
+    postCount: parseInt(c.getDataValue('postCount'), 10),
     createdAt: c.createdAt, updatedAt: c.updatedAt,
   }));
 };

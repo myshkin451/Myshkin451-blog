@@ -3,8 +3,8 @@ const { success, created, paginated } = require('../utils/response');
 const postService = require('../services/postService');
 
 exports.getAllPosts = catchAsync(async (req, res) => {
-  const posts = await postService.getAllPosts();
-  success(res, posts);
+  const { posts, pagination } = await postService.getAllPosts(req.query);
+  paginated(res, posts, pagination);
 });
 
 exports.getPostById = catchAsync(async (req, res) => {

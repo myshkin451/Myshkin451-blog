@@ -9,11 +9,27 @@ const POST_INCLUDES = [
   { model: Tag, as: 'tags', attributes: ['id', 'name', 'slug'], through: { attributes: [] } },
 ];
 
-exports.getAllPosts = async () => {
-  return Post.findAll({
+exports.getAllPosts = async ({ page = 1, pageSize = 10, sort = 'createdAt', order = 'DESC' } = {}) => {
+  const limit = parseInt(pageSize);
+  const offset = (parseInt(page) - 1) * limit;
+
+  const { count, rows } = await Post.findAndCountAll({
     include: POST_INCLUDES,
-    order: [['createdAt', 'DESC']],
+    order: [[sort, order]],
+    limit,
+    offset,
+    distinct: true, // 避免 include 导致 count 不准
   });
+
+  return {
+    posts: rows,
+    pagination: {
+      total: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page),
+      pageSize: limit,
+    },
+  };
 };
 
 exports.getPostById = async (id) => {
