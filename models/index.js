@@ -81,15 +81,14 @@ Comment.belongsTo(Comment, {
     as: 'parent'
 });
 
-// 同步数据库模型（在开发环境中）
+// 数据库 schema 变更通过 migrations 管理，不再使用 sync({ alter: true })
+// 运行 migration: npx sequelize-cli db:migrate
 const syncDatabase = async () => {
     try {
-        if (process.env.NODE_ENV === 'development') {
-            await sequelize.sync({ alter: true });
-            console.log('数据库同步完成');
-        }
+        await sequelize.authenticate();
+        console.log('数据库连接成功');
     } catch (error) {
-        console.error('数据库同步失败:', error);
+        console.error('数据库连接失败:', error);
     }
 };
 
