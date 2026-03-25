@@ -16,7 +16,7 @@ exports.protect = async (req, res, next) => {
         }
     
         // 验证令牌
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
         // 查找用户
         const user = await User.findByPk(decoded.id);

@@ -7,6 +7,12 @@ const routes = require('./routes');
 // 加载环境变量
 dotenv.config();
 
+// 启动前校验必需的环境变量
+if (!process.env.JWT_SECRET) {
+  console.error('致命错误：环境变量 JWT_SECRET 未设置。请在 .env 文件中配置后重启。');
+  process.exit(1);
+}
+
 const app = express();
 
 // 中间件

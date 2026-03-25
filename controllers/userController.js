@@ -29,10 +29,10 @@ exports.register = async (req, res) => {
         // 生成JWT令牌
         const token = jwt.sign(
             { id: user.id, username: user.username },
-            process.env.JWT_SECRET || 'your-secret-key',
+            process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
-        
+
         res.status(201).json({
             message: '注册成功',
             token,
@@ -70,10 +70,10 @@ exports.login = async (req, res) => {
         // 生成JWT令牌
         const token = jwt.sign(
             { id: user.id, username: user.username },
-            process.env.JWT_SECRET || 'your-secret-key',
+            process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
-        
+
         res.json({
             message: '登录成功',
             token,
