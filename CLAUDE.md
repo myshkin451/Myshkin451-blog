@@ -44,6 +44,22 @@ Myshkin451-blog/
 ├── middlewares/
 │   ├── authMiddleware.js   # JWT 认证 + 权限校验
 │   └── uploadMiddleware.js # Multer 文件上传配置
+├── services/               # 业务逻辑层
+│   ├── postService.js
+│   ├── userService.js
+│   ├── categoryService.js
+│   ├── tagService.js
+│   ├── commentService.js
+│   ├── uploadService.js
+│   └── adminService.js
+├── utils/                  # 工具函数
+│   ├── AppError.js         # 自定义错误类
+│   ├── catchAsync.js       # async 包装器
+│   ├── response.js         # 统一响应格式
+│   ├── slug.js             # slug 生成
+│   └── logger.js           # pino 结构化日志
+├── migrations/             # Sequelize 数据库迁移
+├── validators/             # express-validator 验证规则
 ├── models/                 # Sequelize 数据模型
 │   ├── Category.js
 │   ├── Comment.js

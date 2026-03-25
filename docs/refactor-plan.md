@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 2，步骤 2B.1（2A 已全部完成）
+> **下一步：** 阶段 3，步骤 3A.1（阶段 2 已全部完成）
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -153,53 +153,57 @@
 
 ### 2B. Service 层
 
-- [ ] **2B.1 建立 services/ 目录**
+- [x] **2B.1 建立 services/ 目录**
   - `services/postService.js` — 文章 CRUD、slug 生成、分页查询
   - `services/userService.js` — 注册/登录/密码加密/token 生成
   - `services/categoryService.js`、`tagService.js`、`commentService.js`、`uploadService.js`
 
-- [ ] **2B.2 重构所有 controller**
+- [x] **2B.2 重构所有 controller**
   - Controller 只负责：解析请求参数 → 调用 service → 返回响应
   - 业务逻辑、数据库查询全部下沉到 service
 
 ### 2C. 数据模型 & 查询
 
-- [ ] **2C.1 修复 Slug 生成逻辑**
+- [x] **2C.1 修复 Slug 生成逻辑**
   - 去掉随机数后缀，改为：生成 slug → 查重 → 重复则追加 `-2`、`-3`
   - Post、Category、Tag 统一使用同一套 slug 工具函数
   - 更新时仅在 title 变化时重新生成 slug
 
-- [ ] **2C.2 引入 Sequelize Migrations**
+- [x] **2C.2 引入 Sequelize Migrations**
   - 用 `sequelize-cli` 管理 schema 变更
   - 为当前 schema 生成初始 migration 作为基线
   - 移除 `models/index.js` 中的 `sync({ alter: true })`
 
-- [ ] **2C.3 添加缺失索引**（通过 migration）
+- [x] **2C.3 添加缺失索引**（通过 migration）
   - `posts`: `status`、`categoryId`、`createdAt`，复合索引 `(status, createdAt)`
   - `comments`: `postId`、`userId`
 
-- [ ] **2C.4 优化 N+1 查询**
+- [x] **2C.4 优化 N+1 查询**
   - `getAllCategories`/`getAllTags` 不 include 全部 posts，只返回文章计数
   - 详情接口按需加载关联数据，且加分页
 
-- [ ] **2C.5 列表接口添加分页**
+- [x] **2C.5 列表接口添加分页**
   - 统一查询参数：`?page=1&pageSize=10&sort=createdAt&order=desc`
   - `getAllPosts` 必须改为分页（当前返回全量数据）
   - `getAllCategories`/`getAllTags` 预留分页能力
 
 ### 2D. 日志
 
-- [ ] **2D.1 引入结构化日志**
+- [x] **2D.1 引入结构化日志**
   - 引入 `pino` 或 `winston`，替换所有 `console.log`/`console.error`
   - 请求日志中间件、错误日志含 stack trace + request context
 
 **阶段 2 验证：** `npm run dev` 启动无报错 + 所有 API 返回统一格式 `{ success, data, message }` + 列表接口返回 `pagination` + slug 不再包含随机数
 
 **阶段 2 备注：**
-- 2A: 新建 utils/ 目录，含 AppError.js（5 个错误子类）、catchAsync.js、response.js（success/paginated/created）
-- 2A.3: 全局错误中间件区分 AppError（业务错误）、Sequelize 错误、JSON 解析错误、未知错误；生产环境隐藏 stack
-- 2A.3: 顺带移除了 app.js 末尾重复的 express.json/urlencoded 调用（位于错误处理之后，从未生效）
-- 2A: 此阶段仅建立基础设施，controller 尚未改用新工具（2B 阶段执行）
+- 2A: 新建 utils/（AppError.js 含 5 个子类、catchAsync.js、response.js）；全局错误中间件区分业务/Sequelize/JSON 解析/未知错误；移除 app.js 末尾无效的重复中间件
+- 2B: 新建 services/（7 个 service），所有 controller 改用 catchAsync + service + 统一响应，净减 ~500 行
+- 2C.1: 新建 utils/slug.js，Post/Category/Tag 三模型统一使用 generateUniqueSlug（查重追加 -2、-3），去除随机数后缀
+- 2C.2+2C.3: 引入 sequelize-cli，初始 migration 捕获基线 schema，索引 migration 添加 posts(status, categoryId, createdAt, status+createdAt) + comments(postId, userId)；移除 sync({ alter: true })
+- 2C.4+2C.5: getAllCategories/getAllTags 改用 SQL 子查询 COUNT 替代 include 全部 posts；getAllPosts 改为分页查询
+- 2D.1: 引入 pino + pino-pretty，替换后端所有 console.log/error；新增请求日志中间件；Sequelize SQL 日志走 logger.debug
+- 验证：所有模块加载成功，前端 `npm run build` 构建通过
+- 注意：前端 API 调用的响应格式已变（统一 `{ success, data, message }`），阶段 3 需要适配前端代码
 
 ---
 
@@ -374,7 +378,7 @@
 | ------ | ------ | -------- | -------- | ---------- |
 | 阶段 0 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
 | 阶段 1 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
-| 阶段 2 | 进行中 | 2026-03-25 |          |            |
+| 阶段 2 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
 | 阶段 3 | 未开始 |          |          |            |
 | 阶段 4 | 未开始 |          |          |            |
 | 阶段 5 | 未开始 |          |          |            |
