@@ -59,19 +59,24 @@ exports.getPostById = async (req, res) => {
 
 exports.createPost = async (req, res) => {
     try {
-        // 👇 1. 加入 coverImage 和 createdAt
         const { title, content, excerpt, status, categoryId, tagIds, coverImage, createdAt } = req.body;
-    
-        const post = await Post.create({
+
+        const postData = {
             title,
             content,
             excerpt,
             status: status || 'draft',
             userId: req.user.id,
             categoryId: categoryId || null,
-            coverImage: coverImage || null, // 👇 2. 保存封面
-            createdAt: createdAt || new Date() // 👇 3. 上帝模式：如果有自定义时间就用，没有就用当前时间
-        });
+            coverImage: coverImage || null,
+        };
+
+        // 仅管理员可自定义 createdAt
+        if (createdAt && req.user.isAdmin) {
+            postData.createdAt = createdAt;
+        }
+
+        const post = await Post.create(postData);
     
         if (tagIds && tagIds.length > 0) {
             await post.addTags(tagIds);
@@ -112,9 +117,8 @@ exports.updatePost = async (req, res) => {
         post.categoryId = categoryId || post.categoryId;
         post.coverImage = coverImage;
 
-        //  暴力强制更新时间 
-        // 普通的 update() 会被 Sequelize 过滤，必须用 setDataValue 绕过保护
-        if (createdAt) {
+        // 仅管理员可修改 createdAt
+        if (createdAt && req.user.isAdmin) {
             post.setDataValue('createdAt', createdAt);
         }
     

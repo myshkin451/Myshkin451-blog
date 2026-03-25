@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 1，步骤 1A.2
+> **下一步：** 阶段 1，步骤 1A.3
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -68,7 +68,7 @@
   - 方案：移除回退值，启动时若 `JWT_SECRET` 未设置直接报错退出
   - 更新 `.env.example` 注明必须修改
 
-- [ ] **1A.2 修复 createdAt 篡改漏洞**
+- [x] **1A.2 修复 createdAt 篡改漏洞**
   - 文件：`controllers/postController.js`
   - 问题：`createPost`/`updatePost` 接受用户传入的 `createdAt`，用 `setDataValue()` 绕过 Sequelize 时间戳保护
   - 方案：仅 admin 可设置 `createdAt`，普通用户提交的直接忽略
