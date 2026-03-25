@@ -1,7 +1,7 @@
 // 引入必要的依赖
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const slugify = require('slugify');
+const { generateUniqueSlug } = require('../utils/slug');
 
 // 定义Post模型
 const Post = sequelize.define('Post', {
@@ -92,22 +92,16 @@ const Post = sequelize.define('Post', {
         }
     ],
 
-    // 钩子函数，在某些操作前后自动执行
     hooks: {
-        // 创建或更新文章前生成slug
-        beforeValidate: (post) => {
+        beforeValidate: async (post) => {
             if (post.title && (!post.slug || post.changed('title'))) {
-                // 从标题生成slug，确保URL友好
-                post.slug = slugify(post.title, {
-                    lower: true,      // 转为小写
-                    strict: true,     // 移除特殊字符
-                    locale: 'zh'      // 支持中文
+                post.slug = await generateUniqueSlug(post.title, async (slug) => {
+                    const where = { slug };
+                    if (post.id) where.id = { [require('sequelize').Op.ne]: post.id };
+                    return !!(await Post.findOne({ where, attributes: ['id'] }));
                 });
-                
-                // 添加随机字符串确保唯一性
-                post.slug += '-' + Math.floor(Math.random() * 1000000).toString();
             }
-        }
+        },
     },
 
     categoryId: {
