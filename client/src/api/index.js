@@ -2,6 +2,14 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
+/**
+ * 从 cookie 中读取 CSRF token
+ */
+function getCsrfToken() {
+  const match = document.cookie.match(/(?:^|;\s*)csrf-token=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : '';
+}
+
 // 创建axios实例
 const api = axios.create({
   baseURL: '/api',
@@ -9,6 +17,20 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json'
   }
+});
+
+// 请求拦截器：非 GET 请求自动附加 CSRF token
+api.interceptors.request.use(async config => {
+  if (config.method !== 'get') {
+    let token = getCsrfToken();
+    // 如果 CSRF cookie 尚未存在，先发一个 GET 请求触发设置
+    if (!token) {
+      await axios.get('/api/health', { withCredentials: true });
+      token = getCsrfToken();
+    }
+    config.headers['x-csrf-token'] = token;
+  }
+  return config;
 });
 
 // 响应拦截器

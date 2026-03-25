@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 const { sequelize, syncDatabase } = require('./models');
 const routes = require('./routes');
 const { globalLimiter } = require('./middlewares/rateLimiter');
+const csrfProtection = require('./middlewares/csrf');
 
 // 加载环境变量
 dotenv.config();
@@ -29,6 +30,7 @@ app.use(globalLimiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
+app.use('/api', csrfProtection);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date() });
