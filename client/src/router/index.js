@@ -78,12 +78,18 @@ const routes = [
     component: () => import('../views/TagDetailView.vue')
   },
 
-  // 管理后台路由
+  // 管理后台路由（子路由）
   {
     path: '/admin',
-    name: 'admin',
     component: () => import('../views/AdminView.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresAdmin: true },
+    children: [
+      { path: '', name: 'admin', component: () => import('../components/admin/DashboardPanel.vue') },
+      { path: 'posts', name: 'admin-posts', component: () => import('../components/admin/PostsManager.vue') },
+      { path: 'comments', name: 'admin-comments', component: () => import('../components/admin/CommentsManager.vue') },
+      { path: 'categories', name: 'admin-categories', component: () => import('../components/admin/CategoriesManager.vue') },
+      { path: 'tags', name: 'admin-tags', component: () => import('../components/admin/TagsManager.vue') },
+    ]
   },
 
   // 404 兜底路由（必须放在最后）
