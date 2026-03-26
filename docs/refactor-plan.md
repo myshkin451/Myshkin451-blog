@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 3，步骤 3B.3（3A + 3B.1 + 3B.2 已完成）
+> **下一步：** 阶段 3，步骤 3C.1（3A + 3B 已完成）
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -240,7 +240,7 @@
     /admin/comments     → CommentsManager.vue
     ```
 
-- [ ] **3B.3 整理 CSS**
+- [x] **3B.3 整理 CSS**
   - 合并 `index.css` 和 `style.css` 为一个文件
   - 按职责组织：Tailwind directives → 全局基础样式 → 组件样式
 
@@ -271,6 +271,7 @@
 - 3A.2: 后端新增 GET /users/me 端点（轻量 token 校验）；auth store 新增 verifyAuth() 方法（首次访问受保护路由时调用服务端校验，每 session 仅一次）；路由守卫改为 async，受保护路由服务端验证 token 有效性；已登录用户访问 login/register 自动重定向；新增 NotFoundView.vue + 404 兜底路由；验证：`npm run build` 构建通过
 - 3B.1: 保留 V2 设计（暗色模式、阅读时间、图片容错、hover 动效），覆写 ArticleCard.vue，删除 ArticleCardV2.vue；HomeView 改为导入统一的 ArticleCard；验证：`npm run build` 构建通过
 - 3B.2: AdminView 改为布局组件 + 子路由（/admin, /admin/posts, /admin/comments, /admin/categories, /admin/tags），新建 DashboardPanel.vue 承载仪表盘内容，各 tab 按需懒加载；EditorView 右侧元数据面板抽取为 PostMetaPanel.vue（封面、摘要、分类、标签、日期、发布状态），EditorView 从 311 行减至 ~160 行；验证：`npm run build` 构建通过
+- 3B.3: style.css 是 Vite 脚手架残留，未被任何文件导入，直接删除；index.css 已是唯一样式入口，结构清晰（Tailwind directives + body 暗色模式），无需合并；验证：`npm run build` 构建通过
 
 ---
 
