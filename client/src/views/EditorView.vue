@@ -29,6 +29,14 @@
     </header>
 
     <div class="container mx-auto px-4 py-8">
+      <div v-if="showDraftBanner" class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-blue-700 dark:text-blue-300 text-sm font-mono flex items-center justify-between">
+        <span>检测到未保存的草稿，是否恢复？</span>
+        <div class="flex gap-2 ml-4">
+          <button @click="restoreDraft" class="px-3 py-1 bg-blue-600 text-white rounded text-xs font-bold hover:bg-blue-700 transition-colors">恢复</button>
+          <button @click="dismissDraft" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">丢弃</button>
+        </div>
+      </div>
+
       <div v-if="error" class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm font-mono flex items-center">
         <span class="mr-2 text-lg">!</span> {{ error }}
       </div>
@@ -62,8 +70,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { ref, reactive, watch, onMounted, onBeforeUnmount } from 'vue';
+import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import Navbar from '../components/Navbar.vue';
 import Footer from '../components/Footer.vue';
@@ -78,6 +86,9 @@ const loading = ref(false);
 const error = ref('');
 const categories = ref([]);
 const tags = ref([]);
+const saved = ref(false);          // true after successful publish/save
+const showDraftBanner = ref(false); // show "restore draft?" banner
+const draftKey = ref('');
 
 const article = reactive({
   id: null,
@@ -91,6 +102,73 @@ const article = reactive({
   createdAt: '',
 });
 
+// --- Draft auto-save ---
+function getDraftKey() {
+  return route.params.id ? `draft:edit:${route.params.id}` : 'draft:new';
+}
+
+function saveDraft() {
+  if (!draftKey.value) return;
+  const data = { title: article.title, content: article.content, excerpt: article.excerpt, coverImage: article.coverImage, categoryId: article.categoryId, tagIds: article.tagIds, published: article.published, createdAt: article.createdAt };
+  localStorage.setItem(draftKey.value, JSON.stringify(data));
+}
+
+function clearDraft() {
+  if (draftKey.value) localStorage.removeItem(draftKey.value);
+}
+
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem(draftKey.value);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    Object.assign(article, data);
+  } catch { /* ignore corrupt data */ }
+  showDraftBanner.value = false;
+}
+
+function dismissDraft() {
+  clearDraft();
+  showDraftBanner.value = false;
+}
+
+let autoSaveTimer = null;
+watch(
+  () => ({ title: article.title, content: article.content, excerpt: article.excerpt, categoryId: article.categoryId, tagIds: [...article.tagIds], published: article.published }),
+  () => {
+    if (saved.value) return; // already published, don't overwrite draft
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(saveDraft, 3000);
+  },
+  { deep: true },
+);
+
+// --- Unsaved changes guard ---
+const isDirty = ref(false);
+watch(
+  () => article.title + article.content,
+  () => { isDirty.value = true; },
+);
+
+function beforeUnloadHandler(e) {
+  if (isDirty.value && !saved.value) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+}
+
+onBeforeRouteLeave(() => {
+  if (isDirty.value && !saved.value) {
+    return window.confirm('有未保存的更改，确定离开吗？');
+  }
+});
+
+onBeforeUnmount(() => {
+  clearTimeout(autoSaveTimer);
+  window.removeEventListener('beforeunload', beforeUnloadHandler);
+});
+
+// --- Save / Publish ---
 const saveArticle = async () => {
   if (!article.title.trim()) {
     error.value = 'Title is required';
@@ -119,6 +197,9 @@ const saveArticle = async () => {
     } else {
       response = await api.createPost(postData);
     }
+
+    saved.value = true;
+    clearDraft();
 
     const newId = response.id || (response.post && response.post.id) || (response.data && response.data.id);
 
@@ -168,6 +249,9 @@ onMounted(async () => {
     return;
   }
 
+  draftKey.value = getDraftKey();
+  window.addEventListener('beforeunload', beforeUnloadHandler);
+
   const [cats, allTags] = await Promise.all([
     api.getCategories(),
     api.getTags(),
@@ -178,5 +262,14 @@ onMounted(async () => {
   if (route.params.id) {
     await fetchArticle(route.params.id);
   }
+
+  // Check for saved draft after loading server data
+  const hasDraft = localStorage.getItem(draftKey.value);
+  if (hasDraft) {
+    showDraftBanner.value = true;
+  }
+
+  // Reset dirty flag after initial data load
+  isDirty.value = false;
 });
 </script>
