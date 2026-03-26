@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 4，步骤 4.2（4.1 已完成）
+> **下一步：** 阶段 4，步骤 4.3（4.1–4.2 已完成）
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -288,7 +288,7 @@
   - 通过 `--target` 区分 dev/prod
   - 使用非 root 用户运行、添加健康检查
 
-- [ ] **4.2 完善 .gitignore**
+- [x] **4.2 完善 .gitignore**
   - 确保排除：`.env`、`.DS_Store`、`uploads/`、`*.log`
   - 检查是否有已提交的敏感文件
 
@@ -313,6 +313,7 @@
 **阶段 4 验证：** `docker compose -f docker-compose.dev.yml up --build` 全部服务启动正常 + lint 通过 + 前后端页面可访问
 
 **阶段 4 备注：**
+- 4.2: .gitignore 补充 .env/.env.docker/client/.env/uploads/ 规则；从 git 追踪中移除 .env、.env.docker、client/.env 和 uploads/ 下的用户上传文件（含数据库密码和 JWT 密钥）；添加 uploads/avatars/.gitkeep 和 uploads/posts/.gitkeep 保留目录结构
 - 4.1: 后端 3 个 Dockerfile（Dockerfile, Dockerfile.backend.dev, Dockerfile.backend.prod）合并为单个 multi-stage `Dockerfile`（base→dev/prod targets）；前端 2 个（Dockerfile.frontend.dev, Dockerfile.prod）合并为 `client/Dockerfile`（dev/build→prod targets）；添加非 root 用户（blog）、后端+前端 prod HEALTHCHECK；新增 `client/.dockerignore`；docker-compose.dev/prod.yml 改用 `target` 指定构建阶段；验证：4 个 target 全部构建成功
 
 ---
