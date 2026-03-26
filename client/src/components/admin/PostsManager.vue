@@ -6,22 +6,22 @@
         写文章
       </router-link>
     </div>
-    
+
     <!-- 搜索和筛选 -->
     <div class="bg-white shadow rounded-lg p-4 mb-6">
       <div class="flex flex-wrap gap-4">
         <div class="flex-grow">
-          <input 
-            type="text" 
-            v-model="searchQuery" 
-            placeholder="搜索文章标题..." 
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="搜索文章标题..."
             class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             @keyup.enter="searchPosts"
           />
         </div>
         <div>
-          <select 
-            v-model="statusFilter" 
+          <select
+            v-model="statusFilter"
             class="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             @change="filterPosts"
           >
@@ -31,37 +31,61 @@
           </select>
         </div>
         <div>
-          <button 
-            @click="searchPosts" 
+          <button
             class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+            @click="searchPosts"
           >
             搜索
           </button>
         </div>
       </div>
     </div>
-    
+
     <!-- 文章列表 -->
     <div class="bg-white shadow rounded-lg overflow-hidden">
       <div v-if="loading" class="p-6 text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+        <div
+          class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"
+        ></div>
         <p class="mt-2 text-gray-600">加载中...</p>
       </div>
-      
-      <div v-else-if="posts.length === 0" class="p-6 text-center text-gray-500">
-        没有找到文章
-      </div>
-      
+
+      <div v-else-if="posts.length === 0" class="p-6 text-center text-gray-500">没有找到文章</div>
+
       <div v-else>
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">标题</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分类</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">发布日期</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">阅读量</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                标题
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                状态
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                分类
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                发布日期
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                阅读量
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                操作
+              </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -70,8 +94,14 @@
                 <div class="text-sm font-medium text-gray-900">{{ post.title }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                      :class="post.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'">
+                <span
+                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  :class="
+                    post.status === 'published'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  "
+                >
                   {{ post.status === 'published' ? '已发布' : '草稿' }}
                 </span>
               </td>
@@ -85,9 +115,18 @@
                 {{ post.viewCount || 0 }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <router-link :to="`/edit/${post.id}`" class="text-blue-600 hover:text-blue-900 mr-3">编辑</router-link>
-                <a :href="`/posts/${post.id}`" target="_blank" class="text-green-600 hover:text-green-900 mr-3">查看</a>
-                <button @click="confirmDelete(post)" class="text-red-600 hover:text-red-900">删除</button>
+                <router-link :to="`/edit/${post.id}`" class="text-blue-600 hover:text-blue-900 mr-3"
+                  >编辑</router-link
+                >
+                <a
+                  :href="`/posts/${post.id}`"
+                  target="_blank"
+                  class="text-green-600 hover:text-green-900 mr-3"
+                  >查看</a
+                >
+                <button class="text-red-600 hover:text-red-900" @click="confirmDelete(post)">
+                  删除
+                </button>
               </td>
             </tr>
           </tbody>
@@ -111,8 +150,7 @@ const fetchPosts = async () => {
   loading.value = true;
   try {
     const response = await api.getPosts();
-    posts.value = Array.isArray(response) ? response : 
-                 (response.posts ? response.posts : []);
+    posts.value = Array.isArray(response) ? response : response.posts ? response.posts : [];
   } catch (error) {
     console.error('获取文章失败:', error);
     posts.value = [];
@@ -132,7 +170,7 @@ const searchPosts = async () => {
     if (statusFilter.value) {
       params.status = statusFilter.value;
     }
-    
+
     const response = await api.searchPosts(params);
     posts.value = response.posts || [];
   } catch (error) {
@@ -166,12 +204,12 @@ const confirmDelete = async (post) => {
 // 格式化日期
 const formatDate = (dateString) => {
   if (!dateString) return '';
-  
+
   const date = new Date(dateString);
   return date.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   });
 };
 

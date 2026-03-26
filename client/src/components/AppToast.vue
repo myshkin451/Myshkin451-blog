@@ -11,9 +11,11 @@
           <span class="shrink-0 text-base leading-none mt-0.5">{{ icons[toast.type] }}</span>
           <span class="flex-1 break-words">{{ toast.message }}</span>
           <button
-            @click="ui.removeToast(toast.id)"
             class="shrink-0 opacity-60 hover:opacity-100 transition-opacity ml-2"
-          >&times;</button>
+            @click="ui.removeToast(toast.id)"
+          >
+            &times;
+          </button>
         </div>
       </transition-group>
     </div>
@@ -41,9 +43,21 @@ const icons = {
 </script>
 
 <style scoped>
-.toast-enter-active { transition: all 0.3s ease-out; }
-.toast-leave-active { transition: all 0.2s ease-in; }
-.toast-enter-from { opacity: 0; transform: translateX(100%); }
-.toast-leave-to { opacity: 0; transform: translateX(100%); }
-.toast-move { transition: transform 0.2s ease; }
+.toast-enter-active {
+  transition: all 0.3s ease-out;
+}
+.toast-leave-active {
+  transition: all 0.2s ease-in;
+}
+.toast-enter-from {
+  opacity: 0;
+  transform: translateX(100%);
+}
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(100%);
+}
+.toast-move {
+  transition: transform 0.2s ease;
+}
 </style>

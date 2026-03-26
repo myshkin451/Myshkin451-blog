@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 4，步骤 4.3（4.1–4.2 已完成）
+> **下一步：** 阶段 4，步骤 4.4（4.1–4.3 已完成）
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -47,6 +47,7 @@
 **阶段 0 验证：** `npm run dev` 和 `cd client && npm run build` 无报错即可（仅删文件/改配置，不涉及功能）
 
 **阶段 0 备注：**
+
 - 0.2: `ArticleCard.vue` 和 `ArticleCardV2.vue` 均在使用中（分别用于列表页和首页），保留两者，合并工作留到阶段 3B.1
 - 0.2: `PlaceholderView.vue` 是 `/guestbook` 路由的临时占位组件，属未完成功能，保留
 - 0.2: `.DS_Store` 已从 git 追踪中移除（`.gitignore` 原已包含该规则，但文件之前已被提交）
@@ -122,6 +123,7 @@
 **阶段 1 验证：** `npm run dev` 启动无报错 + 用 curl 测试：登录接口（速率限制生效）、创建文章（验证规则生效、createdAt 不可篡改）、无 token 访问受保护接口返回 401
 
 **阶段 1 备注：**
+
 - 1A: JWT payload 新增 isAdmin 字段；deletePostImage 限管理员；所有回退密钥已移除
 - 1B: express-validator + express-rate-limit + helmet + sanitize-html 全部接入
 - 1C.1: 采用方案 A（HttpOnly Cookie），前端不再持有 token，仅存 user 信息用于 UI
@@ -196,6 +198,7 @@
 **阶段 2 验证：** `npm run dev` 启动无报错 + 所有 API 返回统一格式 `{ success, data, message }` + 列表接口返回 `pagination` + slug 不再包含随机数
 
 **阶段 2 备注：**
+
 - 2A: 新建 utils/（AppError.js 含 5 个子类、catchAsync.js、response.js）；全局错误中间件区分业务/Sequelize/JSON 解析/未知错误；移除 app.js 末尾无效的重复中间件
 - 2B: 新建 services/（7 个 service），所有 controller 改用 catchAsync + service + 统一响应，净减 ~500 行
 - 2C.1: 新建 utils/slug.js，Post/Category/Tag 三模型统一使用 generateUniqueSlug（查重追加 -2、-3），去除随机数后缀
@@ -267,15 +270,16 @@
 **阶段 3 验证：** `cd client && npm run dev` 启动无报错 + `npm run build` 构建成功 + 登录/登出/发文/浏览/管理后台页面功能正常
 
 **阶段 3 备注：**
+
 - 3A.1: 引入 Pinia，新建 stores/auth.js（user state + hydrate/setUser/updateUser/clearUser）和 stores/ui.js（theme + globalLoading）；main.js 注册 Pinia 并在挂载前 hydrate；所有组件中的 localStorage 操作已迁移至 store（23 处 → 0 处，仅 stores 内部访问 localStorage）；路由守卫改用 auth store 判断登录/admin 状态；验证：`npm run build` 构建通过
 - 3A.2: 后端新增 GET /users/me 端点（轻量 token 校验）；auth store 新增 verifyAuth() 方法（首次访问受保护路由时调用服务端校验，每 session 仅一次）；路由守卫改为 async，受保护路由服务端验证 token 有效性；已登录用户访问 login/register 自动重定向；新增 NotFoundView.vue + 404 兜底路由；验证：`npm run build` 构建通过
 - 3B.1: 保留 V2 设计（暗色模式、阅读时间、图片容错、hover 动效），覆写 ArticleCard.vue，删除 ArticleCardV2.vue；HomeView 改为导入统一的 ArticleCard；验证：`npm run build` 构建通过
 - 3B.2: AdminView 改为布局组件 + 子路由（/admin, /admin/posts, /admin/comments, /admin/categories, /admin/tags），新建 DashboardPanel.vue 承载仪表盘内容，各 tab 按需懒加载；EditorView 右侧元数据面板抽取为 PostMetaPanel.vue（封面、摘要、分类、标签、日期、发布状态），EditorView 从 311 行减至 ~160 行；验证：`npm run build` 构建通过
 - 3B.3: style.css 是 Vite 脚手架残留，未被任何文件导入，直接删除；index.css 已是唯一样式入口，结构清晰（Tailwind directives + body 暗色模式），无需合并；验证：`npm run build` 构建通过
 - 3C.1: 将 482 行单文件 api/index.js 拆分为 8 个模块：client.js（axios 实例 + CSRF + 401 拦截器）、posts.js、auth.js、comments.js、categories.js、tags.js、uploads.js、admin.js；index.js 改为聚合重新导出，保持 `import api from '../api'` 兼容；清除所有 console.error/console.log；auth store 和 Navbar 的动态 import 改为指向具体子模块；验证：`npm run build` 构建通过
-- 3D.1: ui store 扩展：pendingRequests 计数驱动 globalLoading（computed）、toasts 数组 + addToast/removeToast；新建 LoadingBar.vue（顶部动画进度条）和 AppToast.vue（右上角堆叠通知，支持 success/error/info）；api/client.js 拦截器自动计数 loading 并在网络错误时 toast；checkAuth 标记 _silent 跳过 loading 指示器；App.vue 挂载两个全局组件；验证：`npm run build` 构建通过
+- 3D.1: ui store 扩展：pendingRequests 计数驱动 globalLoading（computed）、toasts 数组 + addToast/removeToast；新建 LoadingBar.vue（顶部动画进度条）和 AppToast.vue（右上角堆叠通知，支持 success/error/info）；api/client.js 拦截器自动计数 loading 并在网络错误时 toast；checkAuth 标记 \_silent 跳过 loading 指示器；App.vue 挂载两个全局组件；验证：`npm run build` 构建通过
 - 3D.2: EditorView 新增：草稿自动保存（watch + 3s debounce → localStorage，按路由区分 new/edit:id）；进入编辑器时检测已有草稿并显示恢复/丢弃 banner；发布成功后自动清除草稿；onBeforeRouteLeave + beforeunload 双重未保存提醒；验证：`npm run build` 构建通过
-- 3D.3: vite.config.js 添加 `esbuild: { drop: ['console', 'debugger'] }`，生产构建自动剥离所有 console.* 和 debugger；验证：`npm run build` 构建通过
+- 3D.3: vite.config.js 添加 `esbuild: { drop: ['console', 'debugger'] }`，生产构建自动剥离所有 console.\* 和 debugger；验证：`npm run build` 构建通过
 
 ---
 
@@ -292,7 +296,7 @@
   - 确保排除：`.env`、`.DS_Store`、`uploads/`、`*.log`
   - 检查是否有已提交的敏感文件
 
-- [ ] **4.3 配置代码规范工具**
+- [x] **4.3 配置代码规范工具**
   - ESLint + Prettier（前后端）
   - `husky` + `lint-staged`：提交前自动格式化
 
@@ -313,6 +317,8 @@
 **阶段 4 验证：** `docker compose -f docker-compose.dev.yml up --build` 全部服务启动正常 + lint 通过 + 前后端页面可访问
 
 **阶段 4 备注：**
+
+- 4.3: 后端引入 ESLint（flat config）+ Prettier + globals；前端引入 ESLint + eslint-plugin-vue + Prettier；共享 .prettierrc；husky pre-commit hook + lint-staged 自动格式化暂存文件；`--fix` 自动修复了 vue/attributes-order 等问题；剩余仅 warnings（unused vars、require-default-prop），不影响功能；验证：`npm run build` 构建通过
 - 4.2: .gitignore 补充 .env/.env.docker/client/.env/uploads/ 规则；从 git 追踪中移除 .env、.env.docker、client/.env 和 uploads/ 下的用户上传文件（含数据库密码和 JWT 密钥）；添加 uploads/avatars/.gitkeep 和 uploads/posts/.gitkeep 保留目录结构
 - 4.1: 后端 3 个 Dockerfile（Dockerfile, Dockerfile.backend.dev, Dockerfile.backend.prod）合并为单个 multi-stage `Dockerfile`（base→dev/prod targets）；前端 2 个（Dockerfile.frontend.dev, Dockerfile.prod）合并为 `client/Dockerfile`（dev/build→prod targets）；添加非 root 用户（blog）、后端+前端 prod HEALTHCHECK；新增 `client/.dockerignore`；docker-compose.dev/prod.yml 改用 `target` 指定构建阶段；验证：4 个 target 全部构建成功
 
@@ -344,15 +350,15 @@
 
 > 按需选做，不影响核心重构。
 
-| #   | 功能         | 说明                                           |
-| --- | ------------ | ---------------------------------------------- |
-| 6.1 | SEO 优化     | vue-meta/unhead 管理 meta tags，生成 sitemap   |
-| 6.2 | 图片优化     | `sharp` 上传时自动压缩/生成缩略图              |
-| 6.3 | Redis 缓存   | 缓存热门文章、分类/标签，减少数据库压力        |
-| 6.4 | 软删除       | 文章/评论添加 `deletedAt`，支持回收站          |
-| 6.5 | API 文档     | `swagger-jsdoc` + `swagger-ui-express`         |
-| 6.6 | 全文搜索     | Elasticsearch / MeiliSearch 替代 SQL LIKE      |
-| 6.7 | 文章版本历史 | 每次编辑保存 diff，支持查看和回滚              |
+| #   | 功能         | 说明                                         |
+| --- | ------------ | -------------------------------------------- |
+| 6.1 | SEO 优化     | vue-meta/unhead 管理 meta tags，生成 sitemap |
+| 6.2 | 图片优化     | `sharp` 上传时自动压缩/生成缩略图            |
+| 6.3 | Redis 缓存   | 缓存热门文章、分类/标签，减少数据库压力      |
+| 6.4 | 软删除       | 文章/评论添加 `deletedAt`，支持回收站        |
+| 6.5 | API 文档     | `swagger-jsdoc` + `swagger-ui-express`       |
+| 6.6 | 全文搜索     | Elasticsearch / MeiliSearch 替代 SQL LIKE    |
+| 6.7 | 文章版本历史 | 每次编辑保存 diff，支持查看和回滚            |
 
 **阶段 6 备注：**
 
@@ -385,12 +391,12 @@
 
 ## 进度追踪
 
-| 阶段   | 状态   | 开始日期 | 完成日期 | Session 数 |
-| ------ | ------ | -------- | -------- | ---------- |
+| 阶段   | 状态   | 开始日期   | 完成日期   | Session 数 |
+| ------ | ------ | ---------- | ---------- | ---------- |
 | 阶段 0 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
 | 阶段 1 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
 | 阶段 2 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
 | 阶段 3 | 已完成 | 2026-03-25 | 2026-03-26 | 3          |
-| 阶段 4 | 进行中 | 2026-03-26 |          |            |
-| 阶段 5 | 未开始 |          |          |            |
-| 阶段 6 | 未开始 |          |          |            |
+| 阶段 4 | 进行中 | 2026-03-26 |            |            |
+| 阶段 5 | 未开始 |            |            |            |
+| 阶段 6 | 未开始 |            |            |            |

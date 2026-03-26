@@ -7,7 +7,12 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "init-db": "node scripts/init-db.js",
-    "health-check": "node scripts/health-check.js"
+    "health-check": "node scripts/health-check.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -37,5 +42,27 @@
     "sequelize": "^6.37.7",
     "sequelize-cli": "^6.6.2",
     "slugify": "^1.6.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.1"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,css}": [
+      "prettier --write"
+    ],
+    "client/**/*.{js,vue}": [
+      "eslint --fix --config client/eslint.config.mjs",
+      "prettier --write"
+    ]
   }
 }
