@@ -107,8 +107,7 @@ Myshkin451-blog/
 │   ├── vite.config.js
 │   ├── tailwind.config.cjs
 │   └── package.json
-├── Dockerfile.backend.dev
-├── Dockerfile.backend.prod
+├── Dockerfile                 # 后端 multi-stage (dev/prod targets)
 ├── docker-compose.dev.yml
 ├── docker-compose.prod.yml
 ├── .env.example

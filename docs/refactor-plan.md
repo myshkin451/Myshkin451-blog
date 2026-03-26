@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 4，步骤 4.1（阶段 0–3 全部完成）
+> **下一步：** 阶段 4，步骤 4.2（4.1 已完成）
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -283,7 +283,7 @@
 
 > 目标：精简 Docker 配置、完善 CI/CD、添加代码规范工具。可与阶段 2/3 穿插进行。
 
-- [ ] **4.1 精简 Dockerfile**
+- [x] **4.1 精简 Dockerfile**
   - 合并为：`Dockerfile`(后端 multi-stage) + `client/Dockerfile`(前端 multi-stage)
   - 通过 `--target` 区分 dev/prod
   - 使用非 root 用户运行、添加健康检查
@@ -313,6 +313,7 @@
 **阶段 4 验证：** `docker compose -f docker-compose.dev.yml up --build` 全部服务启动正常 + lint 通过 + 前后端页面可访问
 
 **阶段 4 备注：**
+- 4.1: 后端 3 个 Dockerfile（Dockerfile, Dockerfile.backend.dev, Dockerfile.backend.prod）合并为单个 multi-stage `Dockerfile`（base→dev/prod targets）；前端 2 个（Dockerfile.frontend.dev, Dockerfile.prod）合并为 `client/Dockerfile`（dev/build→prod targets）；添加非 root 用户（blog）、后端+前端 prod HEALTHCHECK；新增 `client/.dockerignore`；docker-compose.dev/prod.yml 改用 `target` 指定构建阶段；验证：4 个 target 全部构建成功
 
 ---
 
@@ -389,6 +390,6 @@
 | 阶段 1 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
 | 阶段 2 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
 | 阶段 3 | 已完成 | 2026-03-25 | 2026-03-26 | 3          |
-| 阶段 4 | 未开始 |          |          |            |
+| 阶段 4 | 进行中 | 2026-03-26 |          |            |
 | 阶段 5 | 未开始 |          |          |            |
 | 阶段 6 | 未开始 |          |          |            |

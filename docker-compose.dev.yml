@@ -22,7 +22,8 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend.dev
+      dockerfile: Dockerfile
+      target: dev
     container_name: blog-backend
     depends_on:
       db:
@@ -49,7 +50,8 @@ services:
   frontend:
     build:
       context: ./client
-      dockerfile: Dockerfile.frontend.dev
+      dockerfile: Dockerfile
+      target: dev
     container_name: blog-frontend
     depends_on:
       - backend
