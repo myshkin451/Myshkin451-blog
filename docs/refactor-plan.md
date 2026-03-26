@@ -275,6 +275,7 @@
 - 3C.1: 将 482 行单文件 api/index.js 拆分为 8 个模块：client.js（axios 实例 + CSRF + 401 拦截器）、posts.js、auth.js、comments.js、categories.js、tags.js、uploads.js、admin.js；index.js 改为聚合重新导出，保持 `import api from '../api'` 兼容；清除所有 console.error/console.log；auth store 和 Navbar 的动态 import 改为指向具体子模块；验证：`npm run build` 构建通过
 - 3D.1: ui store 扩展：pendingRequests 计数驱动 globalLoading（computed）、toasts 数组 + addToast/removeToast；新建 LoadingBar.vue（顶部动画进度条）和 AppToast.vue（右上角堆叠通知，支持 success/error/info）；api/client.js 拦截器自动计数 loading 并在网络错误时 toast；checkAuth 标记 _silent 跳过 loading 指示器；App.vue 挂载两个全局组件；验证：`npm run build` 构建通过
 - 3D.2: EditorView 新增：草稿自动保存（watch + 3s debounce → localStorage，按路由区分 new/edit:id）；进入编辑器时检测已有草稿并显示恢复/丢弃 banner；发布成功后自动清除草稿；onBeforeRouteLeave + beforeunload 双重未保存提醒；验证：`npm run build` 构建通过
+- 3D.3: vite.config.js 添加 `esbuild: { drop: ['console', 'debugger'] }`，生产构建自动剥离所有 console.* 和 debugger；验证：`npm run build` 构建通过
 
 ---
 
@@ -387,7 +388,7 @@
 | 阶段 0 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
 | 阶段 1 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
 | 阶段 2 | 已完成 | 2026-03-25 | 2026-03-25 | 1          |
-| 阶段 3 | 进行中 | 2026-03-25 |          |            |
+| 阶段 3 | 已完成 | 2026-03-25 | 2026-03-26 | 3          |
 | 阶段 4 | 未开始 |          |          |            |
 | 阶段 5 | 未开始 |          |          |            |
 | 阶段 6 | 未开始 |          |          |            |

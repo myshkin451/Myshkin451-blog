@@ -167,32 +167,32 @@ User ─┬─< Post >─── Category
 ## 已知问题
 
 ### 安全
-- `authMiddleware.js` 中存在硬编码 JWT 密钥回退值
-- `postController.js` 中 `createdAt` 可被任意用户篡改
-- 前端路由守卫的 admin 校验仅依赖 localStorage，可伪造
-- Token 存于 localStorage，存在 XSS 风险
-- 无速率限制、无 CSRF 防护
+- ~~`authMiddleware.js` 中存在硬编码 JWT 密钥回退值~~（阶段 1A.1 已修复）
+- ~~`postController.js` 中 `createdAt` 可被任意用户篡改~~（阶段 1A.2 已修复）
+- ~~前端路由守卫的 admin 校验仅依赖 localStorage，可伪造~~（阶段 1A.3 + 3A.2 已修复，服务端校验 token）
+- ~~Token 存于 localStorage，存在 XSS 风险~~（阶段 1C.1 已修复，改用 HttpOnly Cookie）
+- ~~无速率限制、无 CSRF 防护~~（阶段 1B.2 + 1C.3 已修复）
 
 ### 架构
-- 无 Service 业务逻辑层，所有逻辑堆在 Controller
-- 无状态管理（Pinia/Vuex），前端依赖 localStorage
-- API 响应格式不统一
-- 无输入验证层
-- 数据库使用 `{ alter: true }` 同步，无迁移机制
+- ~~无 Service 业务逻辑层，所有逻辑堆在 Controller~~（阶段 2B 已修复）
+- ~~无状态管理（Pinia/Vuex），前端依赖 localStorage~~（阶段 3A.1 已修复，引入 Pinia）
+- ~~API 响应格式不统一~~（阶段 2A 已修复）
+- ~~无输入验证层~~（阶段 1B.1 已修复，引入 express-validator）
+- ~~数据库使用 `{ alter: true }` 同步，无迁移机制~~（阶段 2C.2 已修复，引入 Sequelize Migrations）
 
 ### 代码质量
 - 零测试覆盖
-- Slug 生成拼接随机数导致 URL 不美观
-- 列表接口缺少分页（getAllPosts, getAllCategories 等）
-- 存在死代码：testDb.js, HelloWorld.vue, fixSlugs.js
-- ~~ArticleCard.vue 和 ArticleCardV2.vue 重复组件~~（已合并）
-- 大量 console.log 残留
-- 后端 package.json 混入前端依赖（ByteMD 等）
+- ~~Slug 生成拼接随机数导致 URL 不美观~~（阶段 2C.1 已修复）
+- ~~列表接口缺少分页（getAllPosts, getAllCategories 等）~~（阶段 2C.5 已修复）
+- ~~存在死代码：testDb.js, HelloWorld.vue, fixSlugs.js~~（阶段 0.2 已清理）
+- ~~ArticleCard.vue 和 ArticleCardV2.vue 重复组件~~（阶段 3B.1 已合并）
+- ~~大量 console.log 残留~~（阶段 0.2 清理 + 阶段 3D.3 生产构建自动剥离）
+- ~~后端 package.json 混入前端依赖（ByteMD 等）~~（阶段 0.3 已修复）
 
 ### 部署
 - 原阿里云 ECS 已过期，当前无运行环境
 - CI/CD deploy 阶段会失败（已改为仅手动触发）
-- 无数据库迁移策略（开发环境用 `{ alter: true }` 同步）
+- ~~无数据库迁移策略（开发环境用 `{ alter: true }` 同步）~~（阶段 2C.2 已修复）
 
 ---
 
