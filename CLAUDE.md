@@ -177,7 +177,7 @@ User ─┬─< Post >─── Category
 - Slug 生成拼接随机数导致 URL 不美观
 - 列表接口缺少分页（getAllPosts, getAllCategories 等）
 - 存在死代码：testDb.js, HelloWorld.vue, fixSlugs.js
-- ArticleCard.vue 和 ArticleCardV2.vue 重复组件
+- ~~ArticleCard.vue 和 ArticleCardV2.vue 重复组件~~（已合并）
 - 大量 console.log 残留
 - 后端 package.json 混入前端依赖（ByteMD 等）
 

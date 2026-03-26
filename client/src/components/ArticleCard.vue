@@ -1,83 +1,150 @@
 <template>
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden border hover:shadow-md transition duration-300">
-      <!-- 文章封面图(如果有) -->
-      <img v-if="article.coverImage" 
-           :src="article.coverImage" 
-           :alt="article.title || '文章'"
-           class="w-full h-48 object-cover" />
-      
-      <div class="p-4">
-        <!-- 文章标题 -->
-        <router-link :to="`/posts/${article.id}`" class="block">
-          <h2 class="text-xl font-bold text-gray-800 hover:text-blue-600 mb-2">{{ article.title || '无标题文章' }}</h2>
-        </router-link>
-        
-        <!-- 文章元信息 -->
-        <div class="flex items-center text-sm text-gray-500 mb-3">
-          <span v-if="article.author" class="flex items-center mr-4">
-            <img :src="article.author.avatar || '/img/default-avatar.png'" 
-                 :alt="article.author.username || '作者'"
-                 class="w-6 h-6 rounded-full mr-1" />
-            {{ article.author?.username || '未知作者' }}
-          </span>
-          <span v-if="article.createdAt" class="mr-4">{{ formatDate(article.createdAt) }}</span>
-          <span v-if="article.views !== undefined" class="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            {{ article.views }}
+  <div
+    class="group relative rounded-2xl p-[1px] transition-transform duration-150
+           hover:-translate-y-[2px]"
+    :class="outerClass"
+  >
+    <article
+      class="relative overflow-hidden rounded-2xl border border-zinc-200/70 bg-white/60 shadow-sm backdrop-blur
+             dark:border-zinc-800/70 dark:bg-zinc-900/30"
+    >
+      <router-link :to="`/posts/${article.id}`" class="block">
+        <div class="relative aspect-[16/10] overflow-hidden border-b border-zinc-200/60 dark:border-zinc-800/60">
+          <img
+            v-if="validImage"
+            :src="article.coverImage"
+            :alt="article.title"
+            class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+            @error="handleImageError"
+          />
+          <div v-else class="h-full w-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
+            <div class="text-xs uppercase tracking-[0.25em] text-zinc-500 dark:text-zinc-400">
+              Myshkin451
+            </div>
+          </div>
+
+          <!-- subtle overlay on hover -->
+          <div
+            class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100
+                   [background-image:linear-gradient(to_top,rgba(0,0,0,0.22),transparent_62%)]"
+          ></div>
+
+          <!-- corner affordance -->
+          <div
+            class="absolute bottom-3 right-3 inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/40 px-3 py-1.5
+                   text-xs text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+          >
+            Read
+            <span class="translate-x-0 transition-transform group-hover:translate-x-[2px]">→</span>
+          </div>
+        </div>
+      </router-link>
+
+      <div class="p-5">
+        <div class="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+          <span>{{ formatDate(article.createdAt) }}</span>
+          <span class="opacity-50">·</span>
+          <span>{{ readingTime }}</span>
+
+          <template v-if="article.category">
+            <span class="opacity-50">·</span>
+            <router-link
+              :to="`/categories/${article.category.slug || article.category.id}`"
+              class="truncate hover:text-zinc-900 dark:hover:text-white"
+            >
+              {{ article.category.name }}
+            </router-link>
+          </template>
+
+          <span v-if="article.views != null" class="ml-auto opacity-70">
+            {{ article.views }} views
           </span>
         </div>
-        
-        <!-- 文章摘要 -->
-        <p class="text-gray-600 mb-4">
-          {{ article.excerpt || (article.content && article.content.substring(0, 150) + '...') || '暂无摘要' }}
+
+        <router-link :to="`/posts/${article.id}`" class="block">
+          <h3
+            class="mt-3 text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50
+                   decoration-zinc-300 underline-offset-4 group-hover:underline"
+          >
+            {{ article.title }}
+          </h3>
+        </router-link>
+
+        <p class="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300 line-clamp-3">
+          {{ article.excerpt || stripHtml(article.content) }}
         </p>
-        
-        <!-- 文章分类和标签 -->
-        <div class="flex flex-wrap items-center">
-          <router-link v-if="article.category" 
-                       :to="`/categories/${article.category.slug || article.category.id}`"
-                       class="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded mr-2 mb-2">
-            {{ article.category.name || '分类' }}
-          </router-link>
-          
-          <router-link v-for="tag in article.tags || []" 
-                       :key="tag.id || tag" 
-                       :to="`/tags/${tag.slug || tag.id || tag}`"
-                       class="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded mr-2 mb-2">
-            # {{ tag.name || tag }}
+
+        <div v-if="article.tags && article.tags.length" class="mt-4 flex flex-wrap gap-2">
+          <router-link
+            v-for="tag in article.tags.slice(0, 4)"
+            :key="tag.id"
+            :to="`/tags/${tag.slug || tag.id}`"
+            class="rounded-full border border-zinc-200/70 bg-white/70 px-2.5 py-1 text-xs text-zinc-700
+                   transition hover:bg-white hover:border-zinc-300
+                   dark:border-zinc-800/70 dark:bg-zinc-950/30 dark:text-zinc-200 dark:hover:bg-zinc-900/60"
+          >
+            # {{ tag.name }}
           </router-link>
         </div>
       </div>
-    </div>
-  </template>
-  
-  <script setup>
-  import { defineProps } from 'vue';
-  
-  const props = defineProps({
-    article: {
-      type: Object,
-      required: true
-    }
+    </article>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+
+const props = defineProps({
+  article: {
+    type: Object,
+    required: true,
+    default: () => ({ tags: [] })
+  }
+});
+
+const imageLoadError = ref(false);
+
+const validImage = computed(() => {
+  return props.article.coverImage &&
+    props.article.coverImage.trim() !== '' &&
+    !imageLoadError.value;
+});
+
+const handleImageError = () => { imageLoadError.value = true; };
+
+const stripHtml = (html) => {
+  if (!html) return '';
+  const tmp = document.createElement('DIV');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric'
   });
-  
-  // 日期格式化
-  const formatDate = (dateString) => {
-    if (!dateString) return '未知日期';
-    
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('zh-CN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch (e) {
-      console.error('日期格式化错误:', e);
-      return '日期格式错误';
-    }
-  };
-  </script>
+};
+
+const estimateReadingTime = (text) => {
+  const t = (text || '').trim();
+  if (!t) return '1 min read';
+
+  // rough split: Chinese chars + english words
+  const chinese = (t.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const englishWords = (t.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[A-Za-z0-9]+/g) || []).length;
+
+  // speeds: ~350 cn chars/min, ~200 words/min
+  const minutes = Math.ceil(chinese / 350 + englishWords / 200);
+  return `${Math.max(1, minutes)} min read`;
+};
+
+const readingTime = computed(() => {
+  const base = props.article.excerpt || stripHtml(props.article.content);
+  return estimateReadingTime(base);
+});
+
+const outerClass = computed(() => {
+  return 'bg-gradient-to-br from-blue-600/25 via-sky-500/10 to-transparent';
+});
+</script>

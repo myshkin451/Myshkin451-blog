@@ -267,7 +267,7 @@
         </div>
 
         <div v-else class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ArticleCardV2 v-for="post in posts" :key="post.id" :article="post" />
+          <ArticleCard v-for="post in posts" :key="post.id" :article="post" />
         </div>
 
         <div class="mt-14 flex justify-center">
@@ -290,7 +290,7 @@ import { ref, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from '../stores/auth';
 import Navbar from '../components/Navbar.vue';
-import ArticleCardV2 from '../components/ArticleCardV2.vue';
+import ArticleCard from '../components/ArticleCard.vue';
 import Pagination from '../components/Pagination.vue';
 import Footer from '../components/Footer.vue';
 import api from '../api';
