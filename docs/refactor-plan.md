@@ -16,7 +16,7 @@
 
 > **下一步：** 阶段 4，步骤 4.4（4.1–4.3 已完成）
 >
-> 阶段 0 已于 2026-03-25 全部完成。
+> 阶段 0–3 已全部完成（2026-03-25 ~ 2026-03-26）。阶段 4 进行中，4.1–4.3 已于 2026-03-26 完成。
 
 ---
 
@@ -318,9 +318,9 @@
 
 **阶段 4 备注：**
 
-- 4.3: 后端引入 ESLint（flat config）+ Prettier + globals；前端引入 ESLint + eslint-plugin-vue + Prettier；共享 .prettierrc；husky pre-commit hook + lint-staged 自动格式化暂存文件；`--fix` 自动修复了 vue/attributes-order 等问题；剩余仅 warnings（unused vars、require-default-prop），不影响功能；验证：`npm run build` 构建通过
-- 4.2: .gitignore 补充 .env/.env.docker/client/.env/uploads/ 规则；从 git 追踪中移除 .env、.env.docker、client/.env 和 uploads/ 下的用户上传文件（含数据库密码和 JWT 密钥）；添加 uploads/avatars/.gitkeep 和 uploads/posts/.gitkeep 保留目录结构
 - 4.1: 后端 3 个 Dockerfile（Dockerfile, Dockerfile.backend.dev, Dockerfile.backend.prod）合并为单个 multi-stage `Dockerfile`（base→dev/prod targets）；前端 2 个（Dockerfile.frontend.dev, Dockerfile.prod）合并为 `client/Dockerfile`（dev/build→prod targets）；添加非 root 用户（blog）、后端+前端 prod HEALTHCHECK；新增 `client/.dockerignore`；docker-compose.dev/prod.yml 改用 `target` 指定构建阶段；验证：4 个 target 全部构建成功
+- 4.2: .gitignore 补充 .env/.env.docker/client/.env/uploads/ 规则；从 git 追踪中移除 .env、.env.docker、client/.env 和 uploads/ 下的用户上传文件（含数据库密码和 JWT 密钥）；添加 uploads/avatars/.gitkeep 和 uploads/posts/.gitkeep 保留目录结构
+- 4.3: 后端引入 ESLint（flat config）+ Prettier + globals；前端引入 ESLint + eslint-plugin-vue + Prettier；共享 .prettierrc；husky pre-commit hook + lint-staged 自动格式化暂存文件；`--fix` 自动修复了 vue/attributes-order 等问题；剩余仅 warnings（unused vars、require-default-prop），不影响功能；验证：`npm run build` 构建通过
 
 ---
 
