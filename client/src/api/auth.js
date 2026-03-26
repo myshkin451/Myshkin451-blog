@@ -27,7 +27,7 @@ export async function logout() {
 }
 
 export async function checkAuth() {
-  const response = await client.get('/users/me');
+  const response = await client.get('/users/me', { _silent: true });
   return response.data;
 }
 

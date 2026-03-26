@@ -1,11 +1,39 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+
+let toastId = 0;
 
 export const useUiStore = defineStore('ui', () => {
   const isDark = ref(false);
-  const globalLoading = ref(false);
 
-  /** Initialise theme from localStorage / system preference */
+  // --- Loading ---
+  const pendingRequests = ref(0);
+  const globalLoading = computed(() => pendingRequests.value > 0);
+
+  function startLoading() { pendingRequests.value++; }
+  function stopLoading() { pendingRequests.value = Math.max(0, pendingRequests.value - 1); }
+
+  // --- Toast ---
+  const toasts = ref([]);
+
+  /**
+   * @param {'success'|'error'|'info'} type
+   * @param {string} message
+   * @param {number} duration — ms, 0 = manual dismiss
+   */
+  function addToast(type, message, duration = 3000) {
+    const id = ++toastId;
+    toasts.value.push({ id, type, message });
+    if (duration > 0) {
+      setTimeout(() => removeToast(id), duration);
+    }
+  }
+
+  function removeToast(id) {
+    toasts.value = toasts.value.filter(t => t.id !== id);
+  }
+
+  // --- Theme ---
   function hydrate() {
     const saved = localStorage.getItem('theme');
     const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -30,5 +58,10 @@ export const useUiStore = defineStore('ui', () => {
     }
   }
 
-  return { isDark, globalLoading, hydrate, toggleTheme };
+  return {
+    isDark, globalLoading, pendingRequests,
+    startLoading, stopLoading,
+    toasts, addToast, removeToast,
+    hydrate, toggleTheme,
+  };
 });

@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 3，步骤 3D.1（3A + 3B + 3C 已完成）
+> **下一步：** 阶段 3，步骤 3D.2（3A + 3B + 3C + 3D.1 已完成）
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -253,7 +253,7 @@
 
 ### 3D. UX 改善
 
-- [ ] **3D.1 全局错误/加载状态**
+- [x] **3D.1 全局错误/加载状态**
   - 请求 loading 指示器
   - 错误 toast 通知
 
@@ -273,6 +273,7 @@
 - 3B.2: AdminView 改为布局组件 + 子路由（/admin, /admin/posts, /admin/comments, /admin/categories, /admin/tags），新建 DashboardPanel.vue 承载仪表盘内容，各 tab 按需懒加载；EditorView 右侧元数据面板抽取为 PostMetaPanel.vue（封面、摘要、分类、标签、日期、发布状态），EditorView 从 311 行减至 ~160 行；验证：`npm run build` 构建通过
 - 3B.3: style.css 是 Vite 脚手架残留，未被任何文件导入，直接删除；index.css 已是唯一样式入口，结构清晰（Tailwind directives + body 暗色模式），无需合并；验证：`npm run build` 构建通过
 - 3C.1: 将 482 行单文件 api/index.js 拆分为 8 个模块：client.js（axios 实例 + CSRF + 401 拦截器）、posts.js、auth.js、comments.js、categories.js、tags.js、uploads.js、admin.js；index.js 改为聚合重新导出，保持 `import api from '../api'` 兼容；清除所有 console.error/console.log；auth store 和 Navbar 的动态 import 改为指向具体子模块；验证：`npm run build` 构建通过
+- 3D.1: ui store 扩展：pendingRequests 计数驱动 globalLoading（computed）、toasts 数组 + addToast/removeToast；新建 LoadingBar.vue（顶部动画进度条）和 AppToast.vue（右上角堆叠通知，支持 success/error/info）；api/client.js 拦截器自动计数 loading 并在网络错误时 toast；checkAuth 标记 _silent 跳过 loading 指示器；App.vue 挂载两个全局组件；验证：`npm run build` 构建通过
 
 ---
 
