@@ -5,6 +5,9 @@ export default defineConfig({
   plugins: [
     vue(),
   ],
+  esbuild: {
+    drop: ['console', 'debugger'],
+  },
   server: {
     host: true,  // 允许外部访问
     proxy: {

@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 3，步骤 3D.3（3A + 3B + 3C + 3D.1 + 3D.2 已完成）
+> **下一步：** 阶段 4，步骤 4.1（阶段 0–3 全部完成）
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -261,7 +261,7 @@
   - 自动保存草稿到 localStorage
   - 离开页面时未保存提醒
 
-- [ ] **3D.3 生产环境去除 console.log**
+- [x] **3D.3 生产环境去除 console.log**
   - `vite.config.js` 中 esbuild drop：`esbuild: { drop: ['console', 'debugger'] }`
 
 **阶段 3 验证：** `cd client && npm run dev` 启动无报错 + `npm run build` 构建成功 + 登录/登出/发文/浏览/管理后台页面功能正常
