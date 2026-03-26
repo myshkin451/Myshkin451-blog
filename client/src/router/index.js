@@ -78,13 +78,20 @@ const routes = [
     component: () => import('../views/TagDetailView.vue')
   },
 
-// 管理后台路由
-{
-  path: '/admin',
-  name: 'admin',
-  component: () => import('../views/AdminView.vue'),
-  meta: { requiresAuth: true, requiresAdmin: true }
-}
+  // 管理后台路由
+  {
+    path: '/admin',
+    name: 'admin',
+    component: () => import('../views/AdminView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+
+  // 404 兜底路由（必须放在最后）
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: () => import('../views/NotFoundView.vue')
+  }
 ];
 
 const router = createRouter({
@@ -93,19 +100,26 @@ const router = createRouter({
 });
 
 // 全局前置守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to) => {
   const auth = useAuthStore();
+  const requiresAuth = to.matched.some(r => r.meta.requiresAuth);
+  const requiresAdmin = to.matched.some(r => r.meta.requiresAdmin);
+  const isGuestPage = to.name === 'login' || to.name === 'register';
 
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!auth.isLoggedIn) {
-      next({ path: '/login', query: { redirect: to.fullPath } });
-    } else if (to.matched.some(record => record.meta.requiresAdmin) && !auth.isAdmin) {
-      next({ path: '/' });
-    } else {
-      next();
+  // 受保护路由：服务端校验 token（每 session 仅一次）
+  if (requiresAuth) {
+    const ok = await auth.verifyAuth();
+    if (!ok) {
+      return { path: '/login', query: { redirect: to.fullPath } };
     }
-  } else {
-    next();
+    if (requiresAdmin && !auth.isAdmin) {
+      return { path: '/' };
+    }
+  }
+
+  // 已登录用户不应访问登录/注册页
+  if (isGuestPage && auth.isLoggedIn) {
+    return { path: to.query.redirect || '/' };
   }
 });
 

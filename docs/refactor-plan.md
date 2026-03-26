@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 3，步骤 3A.2（3A.1 已完成）
+> **下一步：** 阶段 3，步骤 3B.1（3A 已全部完成）
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -219,7 +219,7 @@
   - `stores/ui.js` — 主题、全局 loading
   - 替换所有直接操作 `localStorage` 的代码
 
-- [ ] **3A.2 重构路由守卫**
+- [x] **3A.2 重构路由守卫**
   - 使用 Pinia auth store 判断登录/admin 状态
   - 服务端校验 token 有效性
   - 添加 404 兜底路由 + `NotFoundView.vue`
@@ -268,6 +268,7 @@
 
 **阶段 3 备注：**
 - 3A.1: 引入 Pinia，新建 stores/auth.js（user state + hydrate/setUser/updateUser/clearUser）和 stores/ui.js（theme + globalLoading）；main.js 注册 Pinia 并在挂载前 hydrate；所有组件中的 localStorage 操作已迁移至 store（23 处 → 0 处，仅 stores 内部访问 localStorage）；路由守卫改用 auth store 判断登录/admin 状态；验证：`npm run build` 构建通过
+- 3A.2: 后端新增 GET /users/me 端点（轻量 token 校验）；auth store 新增 verifyAuth() 方法（首次访问受保护路由时调用服务端校验，每 session 仅一次）；路由守卫改为 async，受保护路由服务端验证 token 有效性；已登录用户访问 login/register 自动重定向；新增 NotFoundView.vue + 404 兜底路由；验证：`npm run build` 构建通过
 
 ---
 

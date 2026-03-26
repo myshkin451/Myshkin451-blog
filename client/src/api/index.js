@@ -345,6 +345,12 @@ async uploadPostImage(formData) {
     }
   },
 
+  // 校验当前 token 是否有效（路由守卫用）
+  async checkAuth() {
+    const response = await api.get('/users/me');
+    return response.data;
+  },
+
   // 用户登出
   async logout() {
     try {

@@ -39,6 +39,11 @@ exports.getUserComments = catchAsync(async (req, res) => {
   success(res, comments);
 });
 
+exports.getMe = catchAsync(async (req, res) => {
+  const user = await userService.getMe(req.user.id);
+  success(res, user);
+});
+
 exports.logout = (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,

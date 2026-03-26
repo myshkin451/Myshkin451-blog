@@ -10,6 +10,9 @@ const validate = require('../validators/validate');
 router.post('/register', authLimiter, userValidator.register, validate, userController.register);
 router.post('/login', authLimiter, userValidator.login, validate, userController.login);
 router.post('/logout', userController.logout);
+// Token 校验（轻量级，路由守卫用）
+router.get('/me', protect, userController.getMe);
+
 // 个人中心相关路由
 router.get('/profile', protect, userController.getUserProfile);
 router.put('/profile', protect, userValidator.updateProfile, validate, userController.updateUserProfile);

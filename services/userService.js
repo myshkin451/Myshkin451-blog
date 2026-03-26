@@ -49,6 +49,14 @@ exports.login = async ({ email, password }) => {
   return { token, user: safeUser(user) };
 };
 
+exports.getMe = async (userId) => {
+  const user = await User.findByPk(userId, {
+    attributes: ['id', 'username', 'email', 'isAdmin'],
+  });
+  if (!user) throw new NotFoundError('用户不存在');
+  return { id: user.id, username: user.username, email: user.email, isAdmin: user.isAdmin };
+};
+
 exports.getProfile = async (userId) => {
   const user = await User.findByPk(userId, { attributes: USER_ATTRS });
   if (!user) throw new NotFoundError('用户不存在');
