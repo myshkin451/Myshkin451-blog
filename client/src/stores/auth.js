@@ -30,8 +30,8 @@ export const useAuthStore = defineStore('auth', () => {
   async function verifyAuth() {
     if (verified.value) return isLoggedIn.value;
     try {
-      const { default: apiService } = await import('../api/index.js');
-      const res = await apiService.checkAuth();
+      const { checkAuth } = await import('../api/auth.js');
+      const res = await checkAuth();
       const userData = res.data ?? res;
       setUser(userData);
       verified.value = true;

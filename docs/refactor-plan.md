@@ -14,7 +14,7 @@
 
 ## 当前进度
 
-> **下一步：** 阶段 3，步骤 3C.1（3A + 3B 已完成）
+> **下一步：** 阶段 3，步骤 3D.1（3A + 3B + 3C 已完成）
 >
 > 阶段 0 已于 2026-03-25 全部完成。
 
@@ -246,7 +246,7 @@
 
 ### 3C. API 层整理
 
-- [ ] **3C.1 拆分 api/index.js**
+- [x] **3C.1 拆分 api/index.js**
   - 按资源拆分为：`api/client.js`(axios 实例)、`api/posts.js`、`api/auth.js`、`api/comments.js` 等
   - 统一错误处理拦截器（401 自动跳登录、网络错误 toast）
   - 清理所有 console.log
@@ -272,6 +272,7 @@
 - 3B.1: 保留 V2 设计（暗色模式、阅读时间、图片容错、hover 动效），覆写 ArticleCard.vue，删除 ArticleCardV2.vue；HomeView 改为导入统一的 ArticleCard；验证：`npm run build` 构建通过
 - 3B.2: AdminView 改为布局组件 + 子路由（/admin, /admin/posts, /admin/comments, /admin/categories, /admin/tags），新建 DashboardPanel.vue 承载仪表盘内容，各 tab 按需懒加载；EditorView 右侧元数据面板抽取为 PostMetaPanel.vue（封面、摘要、分类、标签、日期、发布状态），EditorView 从 311 行减至 ~160 行；验证：`npm run build` 构建通过
 - 3B.3: style.css 是 Vite 脚手架残留，未被任何文件导入，直接删除；index.css 已是唯一样式入口，结构清晰（Tailwind directives + body 暗色模式），无需合并；验证：`npm run build` 构建通过
+- 3C.1: 将 482 行单文件 api/index.js 拆分为 8 个模块：client.js（axios 实例 + CSRF + 401 拦截器）、posts.js、auth.js、comments.js、categories.js、tags.js、uploads.js、admin.js；index.js 改为聚合重新导出，保持 `import api from '../api'` 兼容；清除所有 console.error/console.log；auth store 和 Navbar 的动态 import 改为指向具体子模块；验证：`npm run build` 构建通过
 
 ---
 

@@ -231,8 +231,8 @@ const mobileLinkClass = (path) => {
 const toggleTheme = () => uiStore.toggleTheme();
 
 const logout = async () => {
-  const { default: apiService } = await import('../api/index.js');
-  await apiService.logout();
+  const { logout: doLogout } = await import('../api/auth.js');
+  await doLogout();
 
   showProfileMenu.value = false;
   showMobileMenu.value = false;

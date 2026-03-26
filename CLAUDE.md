@@ -88,7 +88,15 @@ Myshkin451-blog/
 │   │   ├── App.vue
 │   │   ├── main.js
 │   │   ├── api/
-│   │   │   └── index.js    # Axios 封装 + 所有 API 调用
+│   │   │   ├── client.js   # Axios 实例 + CSRF/401 拦截器
+│   │   │   ├── posts.js    # 文章 CRUD + 搜索
+│   │   │   ├── auth.js     # 登录/注册/登出/profile
+│   │   │   ├── comments.js # 评论 CRUD + 管理
+│   │   │   ├── categories.js
+│   │   │   ├── tags.js
+│   │   │   ├── uploads.js  # 图片/封面/头像上传
+│   │   │   ├── admin.js    # 管理统计
+│   │   │   └── index.js    # 聚合重新导出（兼容层）
 │   │   ├── router/
 │   │   │   └── index.js    # 路由定义 + 导航守卫
 │   │   ├── components/     # 通用组件
